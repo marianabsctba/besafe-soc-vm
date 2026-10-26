@@ -1,0 +1,8 @@
+# serie suportada oficialmente em Ubuntu 24.04
+wazuh_serie: "4.14"
+wazuh_instalador_url: "https://packages.wazuh.com/{{ wazuh_serie }}/wazuh-install.sh"
+wazuh_dir: /opt/besafe/wazuh
+# heap do indexer: o padrao usa metade da RAM; num lab com um so "cliente" 1 GB basta
+wazuh_indexer_heap: 1g
+# ignora a checagem de hardware do instalador (util em maquina de teste com pouca RAM)
+wazuh_ignorar_checagens: false

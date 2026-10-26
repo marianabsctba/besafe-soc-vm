@@ -20,9 +20,13 @@ Detalhes em [docs/arquitetura.md](docs/arquitetura.md).
 branding/            identidade visual (pantera, paleta, fontes OFL)
   build_assets.py    gera papel de parede, login, GRUB, Plymouth e ícones em branding/out
   preview.py         gera as prévias em docs/
+packer/              template da VM (Ubuntu 24.04, VirtualBox, saída OVA)
 ansible/
   site.yml           playbook principal
-  roles/branding     aplica a identidade no boot, login, XFCE, terminal e Wazuh
+  roles/base         usuário do aluno, XFCE, guest tools, firewall
+  roles/branding     identidade no boot, login, XFCE, terminal e Wazuh
+  roles/wazuh        Wazuh all-in-one enxuto para lab
+  roles/primeiro_boot senhas únicas por cópia da VM
 docs/                arquitetura e prévias
 ```
 
@@ -33,6 +37,23 @@ pip install pillow
 python branding/build_assets.py
 python branding/preview.py
 ```
+
+## Construir a VM
+
+Requisitos no host: [Packer](https://developer.hashicorp.com/packer) e VirtualBox. O Ansible roda dentro da VM, então não precisa estar instalado no host.
+
+```bash
+packer init packer
+packer build packer
+```
+
+A OVA sai em `output-besafe-<versao>/`. O build leva de 30 a 60 minutos.
+
+## Usar a VM
+
+- Requisito: host com 16 GB de RAM (a VM usa 12 GB) e 4 núcleos.
+- Login: usuário `analista`, senha `analista`.
+- A senha do Wazuh dashboard é única por cópia e fica em `~/.besafe/wazuh.txt`.
 
 ## Identidade visual
 

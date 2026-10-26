@@ -1,0 +1,108 @@
+# Wazuh all-in-one (manager, indexer, dashboard) pelo assistente oficial,
+# ajustado para lab: pouca RAM, so localhost e sem atualizacao automatica
+
+- name: diretorio do Wazuh
+  ansible.builtin.file:
+    path: "{{ wazuh_dir }}"
+    state: directory
+    mode: "0700"
+
+- name: ja instalado?
+  ansible.builtin.stat:
+    path: /usr/share/wazuh-dashboard
+  register: wazuh_dashboard_dir
+
+- name: baixar assistente de instalacao
+  ansible.builtin.get_url:
+    url: "{{ wazuh_instalador_url }}"
+    dest: "{{ wazuh_dir }}/wazuh-install.sh"
+    mode: "0700"
+  when: not wazuh_dashboard_dir.stat.exists
+
+- name: instalar all-in-one (demora de 10 a 20 minutos)
+  ansible.builtin.command:
+    cmd: "bash wazuh-install.sh -a{{ ' -i' if wazuh_ignorar_checagens | bool else '' }}"
+    chdir: "{{ wazuh_dir }}"
+    creates: /usr/share/wazuh-dashboard
+  register: wazuh_instalacao
+
+- name: guardar o log da instalacao
+  ansible.builtin.copy:
+    content: "{{ wazuh_instalacao.stdout }}"
+    dest: "{{ wazuh_dir }}/instalacao.log"
+    mode: "0600"
+  when: wazuh_instalacao.changed
+
+# o pacote de arquivos do assistente traz as senhas do build; o primeiro boot troca todas
+- name: localizar pacote de senhas do build
+  ansible.builtin.stat:
+    path: "{{ wazuh_dir }}/wazuh-install-files.tar"
+  register: wazuh_tar
+
+- name: extrair senhas do build para o primeiro boot
+  ansible.builtin.shell: |
+    set -o pipefail
+    tar -xOf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt > senhas-build.txt
+    chmod 600 senhas-build.txt
+    # o pacote tambem traz a chave da CA raiz; nao pode ir para a imagem distribuida
+    rm -f wazuh-install-files.tar
+  args:
+    chdir: "{{ wazuh_dir }}"
+    executable: /bin/bash
+    creates: "{{ wazuh_dir }}/senhas-build.txt"
+  when: wazuh_tar.stat.exists
+
+- name: heap do indexer (Xms)
+  ansible.builtin.lineinfile:
+    path: /etc/wazuh-indexer/jvm.options
+    regexp: "^-Xms"
+    line: "-Xms{{ wazuh_indexer_heap }}"
+  notify: reiniciar wazuh indexer
+
+- name: heap do indexer (Xmx)
+  ansible.builtin.lineinfile:
+    path: /etc/wazuh-indexer/jvm.options
+    regexp: "^-Xmx"
+    line: "-Xmx{{ wazuh_indexer_heap }}"
+  notify: reiniciar wazuh indexer
+
+- name: dashboard so em localhost
+  ansible.builtin.lineinfile:
+    path: /etc/wazuh-dashboard/opensearch_dashboards.yml
+    regexp: "^server.host:"
+    line: "server.host: 127.0.0.1"
+  notify: reiniciar wazuh dashboard
+
+- name: API do Wazuh so em localhost
+  ansible.builtin.lineinfile:
+    path: /var/ossec/api/configuration/api.yaml
+    regexp: "^#?\\s*host:"
+    line: "host: ['127.0.0.1']"
+  notify: reiniciar wazuh manager
+
+# VM offline: nada de apt upgrade puxando versao nova do Wazuh por acidente
+- name: desativar repositorio do Wazuh
+  ansible.builtin.find:
+    paths: /etc/apt/sources.list.d
+    patterns: "wazuh*"
+  register: wazuh_repos
+
+- name: comentar linhas do repositorio
+  ansible.builtin.replace:
+    path: "{{ item.path }}"
+    regexp: "^deb "
+    replace: "#deb "
+  loop: "{{ wazuh_repos.files }}"
+
+- name: congelar pacotes do Wazuh
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop: [wazuh-manager, wazuh-indexer, wazuh-dashboard, filebeat]
+
+- name: servicos ativos no boot
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop: [wazuh-indexer, wazuh-manager, filebeat, wazuh-dashboard]

@@ -1,0 +1,128 @@
+# Boot (GRUB e Plymouth), login e desktop XFCE: so na VM grafica
+
+# GRUB
+- name: diretorio do tema GRUB
+  ansible.builtin.file:
+    path: /boot/grub/themes/besafe
+    state: directory
+    mode: "0755"
+
+- name: tema GRUB
+  ansible.builtin.copy:
+    src: grub/theme.txt
+    dest: /boot/grub/themes/besafe/theme.txt
+    mode: "0644"
+  notify: atualizar grub
+
+- name: fundo do GRUB
+  ansible.builtin.copy:
+    src: "{{ branding_dir }}/grub-fundo.png"
+    dest: /boot/grub/themes/besafe/fundo.png
+    remote_src: true
+    mode: "0644"
+  notify: atualizar grub
+
+- name: caixa de selecao do GRUB
+  ansible.builtin.copy:
+    src: "{{ branding_dir }}/grub-sel_{{ item }}.png"
+    dest: "/boot/grub/themes/besafe/sel_{{ item }}.png"
+    remote_src: true
+    mode: "0644"
+  loop: [c, n, s, e, w, ne, nw, se, sw]
+  notify: atualizar grub
+
+- name: configurar GRUB
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: "^#?{{ item.chave }}="
+    line: "{{ item.chave }}={{ item.valor }}"
+  loop:
+    - { chave: GRUB_THEME, valor: '"/boot/grub/themes/besafe/theme.txt"' }
+    - { chave: GRUB_GFXMODE, valor: "1920x1080,1366x768,auto" }
+    - { chave: GRUB_DISTRIBUTOR, valor: '"Be Safe SOC Lab"' }
+    - { chave: GRUB_CMDLINE_LINUX_DEFAULT, valor: '"quiet splash"' }
+  notify: atualizar grub
+
+# Plymouth
+- name: diretorio do tema Plymouth
+  ansible.builtin.file:
+    path: /usr/share/plymouth/themes/besafe
+    state: directory
+    mode: "0755"
+
+- name: arquivos do tema Plymouth
+  ansible.builtin.copy:
+    src: "plymouth/{{ item }}"
+    dest: "/usr/share/plymouth/themes/besafe/{{ item }}"
+    mode: "0644"
+  loop: [besafe.plymouth, besafe.script]
+  notify: atualizar initramfs
+
+- name: imagens do Plymouth
+  ansible.builtin.copy:
+    src: "{{ branding_dir }}/{{ item }}"
+    dest: "/usr/share/plymouth/themes/besafe/{{ item }}"
+    remote_src: true
+    mode: "0644"
+  loop:
+    - plymouth-logo.png
+    - plymouth-assinatura.png
+    - plymouth-barra.png
+    - plymouth-trilho.png
+  notify: atualizar initramfs
+
+- name: tema Plymouth atual
+  ansible.builtin.command: plymouth-set-default-theme
+  register: plymouth_atual
+  changed_when: false
+
+- name: ativar tema Plymouth
+  ansible.builtin.command: plymouth-set-default-theme besafe
+  when: plymouth_atual.stdout != "besafe"
+  changed_when: true
+  notify: atualizar initramfs
+
+# Login (LightDM)
+- name: tela de login
+  ansible.builtin.template:
+    src: lightdm-gtk-greeter.conf.j2
+    dest: /etc/lightdm/lightdm-gtk-greeter.conf
+    mode: "0644"
+
+# Desktop XFCE e GTK
+- name: diretorio GTK do skel
+  ansible.builtin.file:
+    path: /etc/skel/.config/gtk-3.0
+    state: directory
+    mode: "0755"
+
+- name: acento rosa do GTK para usuarios novos
+  ansible.builtin.copy:
+    src: gtk.css
+    dest: /etc/skel/.config/gtk-3.0/gtk.css
+    mode: "0644"
+
+- name: esquema de cores do terminal
+  ansible.builtin.copy:
+    src: xfce/besafe.theme
+    dest: /usr/share/xfce4/terminal/colorschemes/besafe.theme
+    mode: "0644"
+
+- name: script de primeiro login do XFCE
+  ansible.builtin.template:
+    src: xfce-desktop.sh.j2
+    dest: /usr/local/bin/besafe-aplicar-tema
+    mode: "0755"
+
+- name: rodar o script no inicio da sessao
+  ansible.builtin.copy:
+    dest: /etc/xdg/autostart/besafe-tema.desktop
+    mode: "0644"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Be Safe tema
+      Exec=/usr/local/bin/besafe-aplicar-tema
+      OnlyShowIn=XFCE;
+      NoDisplay=true
+

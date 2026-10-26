@@ -1,0 +1,6 @@
+# Variaveis compartilhadas por todas as roles
+besafe_versao: "0.1.0"
+besafe_usuario: analista
+# false no teste em WSL, onde nao ha boot grafico nem firewall proprio
+besafe_desktop: true
+besafe_firewall: true

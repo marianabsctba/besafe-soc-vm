@@ -8,8 +8,8 @@ Decisões já tomadas e pontos em aberto. Este documento vem antes do código: o
 |---|---|
 | Distribuição | gratuita, OVA para VirtualBox e VMware |
 | Conectividade | 100% offline |
-| Base | Debian 12 + XFCE, build reproduzível com Packer + Ansible |
-| SIEM | Wazuh (manager, indexer, dashboard) |
+| Base | Ubuntu 24.04 LTS + XFCE (Xubuntu core), build reproduzível com Packer + Ansible. Debian foi descartado porque o Wazuh 4.14 não o lista como suportado |
+| SIEM | Wazuh 4.14 all-in-one pelo assistente oficial, heap do indexer em 1 GB, tudo em localhost, repositório desativado e pacotes congelados |
 | IA | modelo local pequeno (3B a 4B, Q4) em CPU, carregado sob demanda; licença Apache 2.0 ou MIT |
 | Nota | determinística, calculada pela semente do aluno; a IA nunca dá nota nem resposta |
 | Identidade | preto e rosa, pantera Be Safe, "Powered By Mariana BS" |
@@ -45,10 +45,19 @@ Modo turbo opcional: o modelo roda no host com GPU e a VM aponta para ele.
 
 | Componente | RAM |
 |---|---|
-| Debian + motor + console | 1 GB |
-| Wazuh | 5 a 6 GB |
+| Ubuntu + motor + console | 1 GB |
+| Wazuh (indexer com heap de 1 GB) | 3 a 4 GB |
 | Modelo 3B Q4 | 2,5 a 3 GB |
-| Total | 10 a 12 GB (host com 16 GB) |
+| Total | 8 a 10 GB (host com 16 GB) |
+
+## Segurança da imagem distribuída
+
+Toda cópia da OVA sai do mesmo build, então nada que seja segredo pode ser igual entre alunos:
+- **Senhas do Wazuh:** o serviço `besafe-primeiro-boot` troca todas no primeiro boot e grava a do admin em `~/.besafe/wazuh.txt` (permissão 600).
+- **Chave da CA do Wazuh:** o pacote `wazuh-install-files.tar` é apagado no build, antes de exportar.
+- **Identidade da máquina:** `machine-id` e chaves SSH são zerados no build e recriados no primeiro boot; o SSH fica desativado.
+- **Rede:** firewall nega toda entrada e o dashboard escuta só em 127.0.0.1.
+- **Limitação conhecida:** os certificados TLS internos do Wazuh são os mesmos em todas as cópias. Como só servem em localhost, o risco é baixo; regenerar no primeiro boot fica para uma versão futura.
 
 ## Em aberto
 

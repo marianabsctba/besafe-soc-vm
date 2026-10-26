@@ -1,0 +1,40 @@
+# Servico que roda uma vez em cada copia da VM (senhas unicas do Wazuh etc.)
+
+- name: diretorio de estado
+  ansible.builtin.file:
+    path: /var/lib/besafe
+    state: directory
+    mode: "0755"
+
+- name: script de primeiro boot
+  ansible.builtin.copy:
+    src: besafe-primeiro-boot.sh
+    dest: /usr/local/sbin/besafe-primeiro-boot
+    mode: "0750"
+
+- name: unidade systemd
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/besafe-primeiro-boot.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Be Safe: configuracao unica do primeiro boot
+      After=network-online.target wazuh-indexer.service wazuh-manager.service
+      Wants=network-online.target
+      ConditionPathExists=!/var/lib/besafe/primeiro-boot.ok
+
+      [Service]
+      Type=oneshot
+      Environment=BESAFE_USUARIO={{ besafe_usuario }}
+      ExecStart=/usr/local/sbin/besafe-primeiro-boot
+      RemainAfterExit=yes
+      TimeoutStartSec=15min
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: ativar servico (roda so no proximo boot)
+  ansible.builtin.systemd:
+    name: besafe-primeiro-boot.service
+    enabled: true
+    daemon_reload: true

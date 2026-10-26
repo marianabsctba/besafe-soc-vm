@@ -3,4 +3,7 @@
   hosts: all
   become: true
   roles:
+    - base
     - branding
+    - wazuh
+    - primeiro_boot

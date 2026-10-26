@@ -1,0 +1,23 @@
+#cloud-config
+# Autoinstall do Ubuntu Server 24.04 para o build da VM Be Safe
+autoinstall:
+  version: 1
+  locale: pt_BR.UTF-8
+  timezone: America/Sao_Paulo
+  keyboard:
+    layout: br
+  storage:
+    layout:
+      name: direct
+  identity:
+    hostname: besafe
+    username: ${usuario}
+    password: "${bcrypt(senha)}"
+  ssh:
+    install-server: true
+    allow-pw: true
+  packages:
+    - openssh-server
+  late-commands:
+    - echo '${usuario} ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/90-build
+    - chmod 440 /target/etc/sudoers.d/90-build

@@ -1,0 +1,58 @@
+# Sistema base: usuario do aluno, desktop XFCE, guest tools e firewall
+
+- name: pacotes basicos
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+      - gnupg
+      - jq
+      - unzip
+      - ufw
+      - python3-pil
+    state: present
+    update_cache: true
+
+- name: desktop XFCE minimo (Xubuntu core)
+  ansible.builtin.apt:
+    name:
+      - xubuntu-core
+      - lightdm
+      - lightdm-gtk-greeter
+      - xfce4-terminal
+      - virtualbox-guest-x11
+      - open-vm-tools-desktop
+    state: present
+  when: besafe_desktop | bool
+
+- name: iniciar em modo grafico
+  ansible.builtin.command: systemctl set-default graphical.target
+  register: alvo
+  changed_when: "'Created symlink' in alvo.stderr"
+  when: besafe_desktop | bool
+
+- name: usuario do aluno
+  ansible.builtin.user:
+    name: "{{ besafe_usuario }}"
+    comment: Analista N1
+    shell: /bin/bash
+    groups: [sudo]
+    append: true
+    password: "{{ besafe_senha_inicial | password_hash('sha512', 'besafesalt') }}"
+    update_password: on_create
+
+# SSH liberado so durante o build; packer/scripts/limpeza.sh remove a regra
+- name: liberar SSH do build
+  community.general.ufw:
+    rule: allow
+    port: "22"
+    proto: tcp
+    comment: build
+  when: besafe_firewall | bool
+
+- name: firewall nega entrada por padrao (servicos so em localhost)
+  community.general.ufw:
+    state: enabled
+    policy: deny
+    direction: incoming
+  when: besafe_firewall | bool
