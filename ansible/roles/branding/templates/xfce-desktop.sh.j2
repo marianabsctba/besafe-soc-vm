@@ -1,0 +1,33 @@
+#!/bin/sh
+# Aplica a identidade Be Safe na sessao XFCE do usuario (roda uma vez no primeiro login)
+MARCA="$HOME/.config/besafe-branding-{{ besafe_versao }}"
+[ -f "$MARCA" ] && exit 0
+
+for m in $(xfconf-query -c xfce4-desktop -l | grep -E 'last-image$'); do
+  xfconf-query -c xfce4-desktop -p "$m" -s "{{ branding_dir }}/wallpaper-1920x1080.png"
+done
+for m in $(xfconf-query -c xfce4-desktop -l | grep -E 'image-style$'); do
+  xfconf-query -c xfce4-desktop -p "$m" -s 5
+done
+
+xfconf-query -c xsettings -p /Net/ThemeName -s Adwaita-dark --create -t string
+xfconf-query -c xsettings -p /Net/IconThemeName -s Papirus-Dark --create -t string
+xfconf-query -c xsettings -p /Gtk/FontName -s "Rajdhani Medium 12" --create -t string
+xfconf-query -c xfwm4 -p /general/theme -s Default-hdpi --create -t string
+xfconf-query -c xfwm4 -p /general/title_font -s "Orbitron Bold 10" --create -t string
+
+mkdir -p "$HOME/.config/xfce4/terminal"
+cat > "$HOME/.config/xfce4/terminal/terminalrc" <<'TERM'
+[Configuration]
+FontName=DejaVu Sans Mono 12
+ColorForeground=#f5e9f2
+ColorBackground=#050407
+ColorCursor=#fc13b4
+ColorCursorUseDefault=FALSE
+ColorBold=#ff6fd0
+ColorBoldUseDefault=FALSE
+ColorPalette=#120a12;#ff4d6d;#5ee3a1;#ffd166;#7aa2ff;#fc13b4;#5ad1e6;#f5e9f2;#5a4656;#ff7b93;#8af0bf;#ffe08f;#a3beff;#ff6fd0;#8ae3f0;#ffffff
+MiscShowUnsafePasteDialog=FALSE
+TERM
+
+touch "$MARCA"

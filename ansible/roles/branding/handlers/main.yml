@@ -1,0 +1,12 @@
+- name: atualizar grub
+  ansible.builtin.command: update-grub
+  changed_when: true
+
+- name: atualizar initramfs
+  ansible.builtin.command: update-initramfs -u
+  changed_when: true
+
+- name: reiniciar wazuh dashboard
+  ansible.builtin.systemd:
+    name: wazuh-dashboard
+    state: restarted

@@ -1,0 +1,20 @@
+#!/bin/sh
+# Banner Be Safe exibido no login de terminal e SSH
+ROSA='\033[38;2;252;19;180m'
+ROSA_CLARO='\033[38;2;255;111;208m'
+NEGRITO='\033[1m'
+FIM='\033[0m'
+
+printf "$ROSA"
+cat <<'BANNER'
+   ____  _____    ____    _    _____ _____
+  | __ )| ____|  / ___|  / \  |  ___| ____|
+  |  _ \|  _|    \___ \ / _ \ | |_  |  _|
+  | |_) | |___    ___) / ___ \|  _| | |___
+  |____/|_____|  |____/_/   \_\_|   |_____|
+BANNER
+printf "$FIM\n"
+printf "  ${NEGRITO}SOC LAB  //  ANALISTA N1${FIM}        versao {{ besafe_versao }}\n\n"
+printf "  Console do plantao:  http://localhost:{{ console_porta }}\n"
+printf "  Wazuh:               https://localhost\n\n"
+printf "${ROSA_CLARO}                              Powered By Mariana BS${FIM}\n\n"

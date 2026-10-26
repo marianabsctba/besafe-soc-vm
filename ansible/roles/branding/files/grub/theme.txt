@@ -1,0 +1,30 @@
+# Tema GRUB Be Safe
+title-text: ""
+desktop-image: "fundo.png"
+desktop-color: "#050407"
+terminal-font: "Unifont Regular 16"
+
++ boot_menu {
+  left = 30%
+  top = 52%
+  width = 40%
+  height = 30%
+  item_font = "Unifont Regular 16"
+  item_color = "#968c8c"
+  selected_item_color = "#050407"
+  selected_item_pixmap_style = "sel_*.png"
+  item_height = 36
+  item_padding = 12
+  item_spacing = 6
+}
+
++ label {
+  top = 86%
+  left = 0
+  width = 100%
+  align = "center"
+  id = "__timeout__"
+  text = "iniciando em %d s"
+  color = "#fc13b4"
+  font = "Unifont Regular 16"
+}

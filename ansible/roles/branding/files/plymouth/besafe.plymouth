@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Be Safe
+Description=Pantera Be Safe, preto e rosa. Powered By Mariana BS
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/besafe
+ScriptFile=/usr/share/plymouth/themes/besafe/besafe.script

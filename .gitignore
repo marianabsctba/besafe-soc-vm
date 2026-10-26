@@ -1,0 +1,5 @@
+branding/out/
+__pycache__/
+*.pyc
+output-*/
+*.ova

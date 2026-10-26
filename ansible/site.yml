@@ -1,0 +1,6 @@
+# Playbook principal da VM Be Safe SOC Lab
+- name: Be Safe SOC Lab
+  hosts: all
+  become: true
+  roles:
+    - branding

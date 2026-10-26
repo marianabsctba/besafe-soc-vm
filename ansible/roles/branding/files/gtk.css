@@ -1,0 +1,13 @@
+/* Acento Be Safe sobre o Adwaita-dark: preto e rosa */
+@define-color theme_selected_bg_color #fc13b4;
+@define-color theme_selected_fg_color #050407;
+@define-color theme_bg_color #120a12;
+@define-color theme_base_color #050407;
+@define-color theme_fg_color #f5e9f2;
+@define-color accent_color #fc13b4;
+@define-color accent_bg_color #fc13b4;
+
+selection, *:selected { background-color: #fc13b4; color: #050407; }
+scale highlight, progressbar progress, switch:checked { background-color: #fc13b4; border-color: #fc13b4; }
+entry:focus, button:focus { outline-color: #fc13b4; }
+link, *:link { color: #ff6fd0; }

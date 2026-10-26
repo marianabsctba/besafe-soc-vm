@@ -1,0 +1,13 @@
+[Scheme]
+Name=Be Safe
+ColorForeground=#f5e9f2
+ColorBackground=#050407
+ColorCursor=#fc13b4
+ColorCursorUseDefault=FALSE
+ColorBold=#ff6fd0
+ColorBoldUseDefault=FALSE
+ColorSelection=#fc13b4
+ColorSelectionBackground=#fc13b4
+ColorSelectionUseDefault=FALSE
+TabActivityColor=#fc13b4
+ColorPalette=#120a12;#ff4d6d;#5ee3a1;#ffd166;#7aa2ff;#fc13b4;#5ad1e6;#f5e9f2;#5a4656;#ff7b93;#8af0bf;#ffe08f;#a3beff;#ff6fd0;#8ae3f0;#ffffff

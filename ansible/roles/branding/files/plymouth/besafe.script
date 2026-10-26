@@ -1,0 +1,37 @@
+# Plymouth Be Safe: pantera pulsando, barra rosa e assinatura
+Window.SetBackgroundTopColor(0.02, 0.016, 0.027);
+Window.SetBackgroundBottomColor(0.02, 0.016, 0.027);
+
+cx = Window.GetWidth() / 2;
+cy = Window.GetHeight() / 2;
+
+logo.image = Image("plymouth-logo.png");
+logo.sprite = Sprite(logo.image);
+logo.sprite.SetPosition(cx - logo.image.GetWidth() / 2, cy - logo.image.GetHeight() / 2 - 60, 1);
+
+trilho.image = Image("plymouth-trilho.png");
+trilho.sprite = Sprite(trilho.image);
+trilho.y = cy + logo.image.GetHeight() / 2;
+trilho.sprite.SetPosition(cx - trilho.image.GetWidth() / 2, trilho.y, 2);
+
+barra.original = Image("plymouth-barra.png");
+barra.sprite = Sprite();
+barra.sprite.SetPosition(cx - barra.original.GetWidth() / 2, trilho.y, 3);
+
+ass.image = Image("plymouth-assinatura.png");
+ass.sprite = Sprite(ass.image);
+ass.sprite.SetPosition(Window.GetWidth() - ass.image.GetWidth() - 40, Window.GetHeight() - ass.image.GetHeight() - 40, 4);
+
+t = 0;
+fun refresh_callback() {
+  t++;
+  logo.sprite.SetOpacity(0.75 + 0.25 * Math.Sin(t / 12));
+}
+Plymouth.SetRefreshFunction(refresh_callback);
+
+fun progress_callback(duration, progress) {
+  w = Math.Int(barra.original.GetWidth() * progress);
+  if (w < 1) w = 1;
+  barra.sprite.SetImage(barra.original.Scale(w, barra.original.GetHeight()));
+}
+Plymouth.SetBootProgressFunction(progress_callback);
