@@ -48,6 +48,28 @@ if [ -x "$FERRAMENTA" ] || [ -f "$FERRAMENTA" ]; then
     printf 'Wazuh dashboard: https://localhost\nusuario: admin\nsenha: %s\n' "$admin" > "$destino/wazuh.txt"
     chown "$USUARIO:$USUARIO" "$destino/wazuh.txt"
     chmod 600 "$destino/wazuh.txt"
+
+    # credenciais visiveis na area de trabalho (a VM e de laboratorio e so escuta em localhost)
+    mesa="/home/$USUARIO/Desktop"
+    install -d -m 755 -o "$USUARIO" -g "$USUARIO" "$mesa"
+    cat > "$mesa/CREDENCIAIS.txt" <<CRED
+BE SAFE SOC LAB - credenciais desta VM
+
+Login da VM e sudo
+  usuario: analista
+  senha:   analista
+
+Wazuh dashboard (abra no Firefox: https://localhost)
+  usuario: admin
+  senha:   $admin
+
+A senha do Wazuh e unica desta copia da VM (gerada no primeiro boot).
+Ela tambem fica em ~/.besafe/wazuh.txt e aparece ao abrir o terminal.
+
+Powered By Mariana BS
+CRED
+    chown "$USUARIO:$USUARIO" "$mesa/CREDENCIAIS.txt"
+    chmod 600 "$mesa/CREDENCIAIS.txt"
   fi
   # as senhas do build nao valem mais e nao devem ficar na imagem
   rm -f "$WAZUH_DIR/senhas-build.txt"

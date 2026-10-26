@@ -46,7 +46,11 @@ Isso quer dizer: você é o usuário `analista`, na máquina `besafe`, dentro da
 
 ## 3. Sua senha do Wazuh
 
-Cada cópia desta VM gera, no primeiro boot, uma senha própria para o Wazuh. Assim ninguém tem a mesma senha que você. Para ver a sua, digite no terminal:
+Cada cópia desta VM gera, no primeiro boot, uma senha própria para o Wazuh. Assim ninguém tem a mesma senha que você. Ela aparece em três lugares:
+
+- no arquivo **CREDENCIAIS.txt**, na área de trabalho;
+- no fim do banner rosa, toda vez que você abre um terminal;
+- no arquivo `~/.besafe/wazuh.txt`, que você pode ler assim:
 
 ```bash
 cat ~/.besafe/wazuh.txt
@@ -129,7 +133,7 @@ Sugestão de estrutura para o caderno:
 |---|---|
 | O Wazuh não abre ou fica carregando | Logo depois de ligar a VM ele leva de 2 a 4 minutos para subir. Espere e recarregue. |
 | Ainda não abre depois de 5 minutos | No terminal: `sudo systemctl restart wazuh-dashboard` (a senha do sudo é `analista`). |
-| Esqueci a senha do Wazuh | `cat ~/.besafe/wazuh.txt` |
+| Esqueci a senha do Wazuh | arquivo **CREDENCIAIS.txt** na área de trabalho, ou `cat ~/.besafe/wazuh.txt` |
 | A VM está lenta | Feche abas do Firefox que não está usando e confirme que a VM tem pelo menos 8 GB de RAM. |
 
 ## Checagem

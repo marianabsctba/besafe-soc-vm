@@ -14,11 +14,16 @@
 | procurar texto | `grep -i "texto" arquivo` |
 | contar linhas com texto | `grep -c "texto" arquivo` |
 | procurar arquivos por nome | `find /caminho -iname "*parte*"` |
-| ranking de valores | `... \| sort \| uniq -c \| sort -nr \| head` |
 | uma coluna (separador vírgula) | `cut -d, -f3 arquivo` |
 | primeira palavra de cada linha | `awk '{print $1}' arquivo` |
 | hash de um arquivo | `sha256sum arquivo` |
 | tipo real de um arquivo | `file arquivo` |
+
+Ranking de valores (a linha mais usada do SOC):
+
+```bash
+... | sort | uniq -c | sort -nr | head
+```
 
 ## Rede
 

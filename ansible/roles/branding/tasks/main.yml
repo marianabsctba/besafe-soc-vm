@@ -68,11 +68,29 @@
     content: ""
     mode: "0644"
 
-- name: prompt rosa
+- name: prompt rosa, banner e senha do Wazuh
   ansible.builtin.copy:
     src: besafe-prompt.sh
-    dest: /etc/profile.d/besafe-prompt.sh
+    dest: /etc/besafe-prompt.sh
     mode: "0644"
+
+# o terminal do XFCE abre shells nao-login, que leem o ~/.bashrc (e nao o /etc/profile.d)
+- name: carregar o prompt no bashrc (usuarios novos e o aluno)
+  ansible.builtin.blockinfile:
+    path: "{{ item }}"
+    marker: "# {mark} BE SAFE"
+    block: "[ -f /etc/besafe-prompt.sh ] && . /etc/besafe-prompt.sh"
+    create: true
+    mode: "0644"
+  loop:
+    - /etc/skel/.bashrc
+    - "/home/{{ besafe_usuario }}/.bashrc"
+
+- name: dono do bashrc do aluno
+  ansible.builtin.file:
+    path: "/home/{{ besafe_usuario }}/.bashrc"
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
 
 - name: identificacao no console
   ansible.builtin.copy:

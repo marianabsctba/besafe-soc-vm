@@ -1,0 +1,65 @@
+Return-Path: <financeiro@transportes-andorinha.example>
+Received: from mail.andorinha-cobranca.example (unknown [203.0.113.66]) by
+ mx.pantera-logistica.example with ESMTP id 4F2A1; Tue, 20 Oct 2026 09:17:03
+ -0300
+Authentication-Results: mx.pantera-logistica.example; spf=fail (domain of
+ transportes-andorinha.example does not designate 203.0.113.66 as permitted
+ sender) smtp.mailfrom=transportes-andorinha.example; dkim=none; dmarc=fail
+ header.from=transportes-andorinha.example
+From:
+ Transportes Andorinha - Financeiro <financeiro@transportes-andorinha.example>
+Reply-To: financeiro.andorinha@correio-rapido.example
+To: contas.pagar@pantera-logistica.example
+Subject: URGENTE: boleto de outubro com novos dados bancarios
+Date: Tue, 20 Oct 2026 09:17:00 -0300
+Message-ID: <20261020091700.4F2A1@andorinha-cobranca.example>
+X-Mailer: PHPMailer 6.8.1
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============2796505863051268105=="
+
+--===============2796505863051268105==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Prezados,
+
+Informamos que, devido a uma mudanca no nosso banco, o boleto de outubro foi =
+emitido com NOVOS DADOS BANCARIOS.
+Pedimos a gentileza de efetuar o pagamento HOJE para evitar a suspensao dos s=
+ervicos de transporte.
+
+O boleto segue em anexo. Caso nao consiga abrir, acesse: http://boletos.andor=
+inha-pagamentos.example/2via?id=3D88213
+
+Qualquer duvida, responda este e-mail.
+
+Atenciosamente,
+Departamento Financeiro
+Transportes Andorinha
+
+--===============2796505863051268105==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="boleto_outubro.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgL09wZW5BY3Rp
+b24gNCAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0g
+L0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAv
+TWVkaWFCb3ggWzAgMCA1OTUgODQyXSAvQ29udGVudHMgNSAwIFIgL1Jlc291cmNlcyA8PCAvRm9u
+dCA8PCAvRjEgNiAwIFIgPj4gPj4gPj4KZW5kb2JqCjQgMCBvYmoKPDwgL1R5cGUgL0FjdGlvbiAv
+UyAvSmF2YVNjcmlwdCAvSlMgKGFwcC5hbGVydCgnVHJlaW5hbWVudG8gQmUgU2FmZTogZXN0ZSBQ
+REYgdGVudG91IGV4ZWN1dGFyIEphdmFTY3JpcHQgYW8gYWJyaXIuJyk7KSA+PgplbmRvYmoKNSAw
+IG9iago8PCAvTGVuZ3RoIDcxID4+CnN0cmVhbQpCVCAvRjEgMTQgVGYgNzIgNzYwIFRkIChCb2xl
+dG8gLSBUcmFuc3BvcnRlcyBBbmRvcmluaGEgLSBPdXR1YnJvKSBUaiBFVAplbmRzdHJlYW0KZW5k
+b2JqCjYgMCBvYmoKPDwgL1R5cGUgL0ZvbnQgL1N1YnR5cGUgL1R5cGUxIC9CYXNlRm9udCAvSGVs
+dmV0aWNhID4+CmVuZG9iago3IDAgb2JqCjw8IC9UaXRsZSAoQm9sZXRvIE91dHVicm8pIC9BdXRo
+b3IgKEZpbmFuY2Vpcm8pIC9DcmVhdG9yIChHZXJhZG9yIGRlIEJvbGV0b3MgMy4xKSAvUHJvZHVj
+ZXIgKFRyZWluYW1lbnRvIEJlIFNhZmUpIC9DcmVhdGlvbkRhdGUgKEQ6MjAyNjEwMjAwOTE1MTIt
+MDMnMDAnKSA+PgplbmRvYmoKeHJlZgowIDgKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5
+IDAwMDAwIG4gCjAwMDAwMDAwNzYgMDAwMDAgbiAKMDAwMDAwMDEzMyAwMDAwMCBuIAowMDAwMDAw
+MjU5IDAwMDAwIG4gCjAwMDAwMDAzOTYgMDAwMDAgbiAKMDAwMDAwMDUxNyAwMDAwMCBuIAowMDAw
+MDAwNTg3IDAwMDAwIG4gCnRyYWlsZXIKPDwgL1NpemUgOCAvUm9vdCAxIDAgUiAvSW5mbyA3IDAg
+UiA+PgpzdGFydHhyZWYKNzU5CiUlRU9GCg==
+
+--===============2796505863051268105==--

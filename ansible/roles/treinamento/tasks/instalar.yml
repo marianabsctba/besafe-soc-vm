@@ -28,6 +28,51 @@
     group: "{{ besafe_usuario }}"
     force: true
 
+# caso final: os logs da PC04 (e o evento "parecido" de outra data) vem do acervo EVTX
+- name: pasta do caso final
+  ansible.builtin.file:
+    path: "/home/{{ besafe_usuario }}/labs/12-caso-final/PC04-logs"
+    state: directory
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    mode: "0750"
+
+- name: logs do caso final
+  ansible.builtin.copy:
+    src: "/opt/besafe/chainsaw/EVTX-ATTACK-SAMPLES/{{ item }}"
+    dest: "/home/{{ besafe_usuario }}/labs/12-caso-final/PC04-logs/"
+    remote_src: true
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    mode: "0640"
+  loop:
+    - Credential Access/sysmon_10_11_lsass_memdump.evtx
+    - Credential Access/sysmon_10_lsass_mimikatz_sekurlsa_logonpasswords.evtx
+    - Credential Access/sysmon_13_keylogger_directx.evtx
+    - Defense Evasion/sysmon_13_rdp_settings_tampering.evtx
+    - Lateral Movement/net_share_drive_5142.evtx
+    - Persistence/wmighost_sysmon_20_21_1.evtx
+
+# em pt_BR o xdg-user-dirs criaria "Area de Trabalho"; os icones e as credenciais ficam em ~/Desktop
+- name: pasta de configuracao do aluno
+  ansible.builtin.file:
+    path: "/home/{{ besafe_usuario }}/.config"
+    state: directory
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    mode: "0755"
+  when: besafe_desktop | bool
+
+- name: area de trabalho fixa em ~/Desktop
+  ansible.builtin.copy:
+    dest: "/home/{{ besafe_usuario }}/.config/user-dirs.dirs"
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    mode: "0644"
+    content: |
+      XDG_DESKTOP_DIR="$HOME/Desktop"
+  when: besafe_desktop | bool
+
 - name: area de trabalho do aluno
   ansible.builtin.file:
     path: "/home/{{ besafe_usuario }}/Desktop"

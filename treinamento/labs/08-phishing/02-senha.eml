@@ -1,0 +1,41 @@
+Return-Path: <noreply@pantera-logistica-suporte.example>
+Received: from smtp.pantera-logistica-suporte.example (unknown
+ [198.51.100.140]) by mx.pantera-logistica.example with ESMTPS id 7C11B; Wed,
+ 21 Oct 2026 07:02:41 -0300
+Authentication-Results: mx.pantera-logistica.example; spf=pass
+ smtp.mailfrom=pantera-logistica-suporte.example; dkim=pass
+ header.d=pantera-logistica-suporte.example; dmarc=pass
+ header.from=pantera-logistica-suporte.example
+From: Suporte de TI <suporte@pantera-logistica-suporte.example>
+To: joana.lima@pantera-logistica.example
+Subject: Sua senha expira hoje - acao necessaria
+Date: Wed, 21 Oct 2026 07:02:30 -0300
+Message-ID: <7C11B.20261021@pantera-logistica-suporte.example>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============4226305308748361221=="
+
+--===============4226305308748361221==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Ola,
+
+Sua senha de rede expira hoje. Para manter o acesso, confirme seus dados em:
+https://portal.pantera-logistica.example/senha
+
+Equipe de TI
+
+--===============4226305308748361221==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<html><body style=3D'font-family:Arial'><p>Ol&aacute;,</p><p>Sua senha de red=
+e <b>expira hoje</b>. Para manter o acesso, confirme seus dados em:</p><p><a =
+href=3D'http://pantera-logistica.login-seguro.example/owa/auth.php?u=3Djoana.=
+lima'>https://portal.pantera-logistica.example/senha</a></p><p>Se n&atilde;o =
+confirmar em 2 horas, sua conta ser&aacute; bloqueada.</p><p>Equipe de TI</p>=
+</body></html>
+
+--===============4226305308748361221==--

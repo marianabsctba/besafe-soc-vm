@@ -1,0 +1,25 @@
+Return-Path: <rh@pantera-logistica.example>
+Received: from exch01.pantera-logistica.example
+ (exch01.pantera-logistica.example [10.10.2.15]) by
+ mx.pantera-logistica.example with ESMTPS id 1A9D0; Thu, 22 Oct 2026 10:30:12
+ -0300
+Authentication-Results: mx.pantera-logistica.example; spf=pass
+ smtp.mailfrom=pantera-logistica.example; dkim=pass
+ header.d=pantera-logistica.example; dmarc=pass
+ header.from=pantera-logistica.example
+From: Recursos Humanos <rh@pantera-logistica.example>
+To: todos@pantera-logistica.example
+Subject: Campanha de vacinacao na sede - quinta-feira
+Date: Thu, 22 Oct 2026 10:30:00 -0300
+Message-ID: <1A9D0.20261022@exch01.pantera-logistica.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Ola, pessoal!
+
+Nesta quinta-feira, das 9h as 16h, teremos vacinacao contra a gripe na sala 3=
+ da sede.
+Nao e necessario agendar. Leve um documento com foto.
+
+RH Pantera Logistica

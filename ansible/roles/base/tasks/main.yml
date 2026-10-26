@@ -20,6 +20,8 @@
       - lightdm
       - lightdm-gtk-greeter
       - xfce4-terminal
+      # editor de texto usado nos labs (caderno de anotacoes, regras YARA e Sigma)
+      - mousepad
       - virtualbox-guest-x11
       - open-vm-tools-desktop
     state: present
