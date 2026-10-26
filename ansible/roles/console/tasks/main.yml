@@ -2,7 +2,8 @@
 
 - name: pacotes do Console
   ansible.builtin.apt:
-    name: [python3-venv, python3-pip]
+    # libgomp1: o llama-server usa OpenMP
+    name: [python3-venv, python3-pip, libgomp1]
     state: present
 
 - name: usuario de sistema do Console

@@ -109,13 +109,33 @@ def conversar(sistema: str, mensagens: list, max_tokens: int = 350, temperatura:
 
 
 # ------------------------------------------------------------------ papeis
+# Referencia tecnica entregue ao modelo: modelos pequenos erram fatos "de memoria",
+# entao o mentor explica conceitos a partir daqui, e nao do que o modelo acha que sabe.
+REFERENCIA = """REFERÊNCIA (use somente estes fatos ao explicar conceitos):
+Tipos de logon do Windows (campo LogonType dos eventos 4624/4625): 2 = interativo, no teclado da própria máquina;
+3 = pela rede (pasta compartilhada, WMI, PsExec); 4 = tarefa agendada; 5 = serviço; 7 = desbloqueio de tela;
+9 = com outras credenciais (runas /netonly, comum em pass-the-hash); 10 = área de trabalho remota (RDP); 11 = credencial em cache.
+Eventos do log de Segurança: 4624 logon com sucesso; 4625 falha de logon; 4672 logon com privilégios de administrador;
+4688 processo criado; 4720 conta criada; 4732 membro adicionado a grupo local; 1102 log de segurança apagado.
+Sysmon: 1 processo criado; 3 conexão de rede; 10 acesso à memória de outro processo; 11 arquivo criado;
+13 valor de registro alterado; 22 consulta DNS.
+LSASS (lsass.exe) guarda credenciais na memória; acessos a ele por programas desconhecidos indicam roubo de senhas,
+mas o antivírus (MsMpEng.exe, do Microsoft Defender) o acessa normalmente.
+PowerShell com -nop (sem perfil), -w hidden (janela oculta) e -enc (comando em base64) é padrão comum em ataques.
+Office (EXCEL.EXE, WINWORD.EXE) iniciando powershell.exe ou cmd.exe é sinal clássico de macro maliciosa.
+certutil.exe com -urlcache baixando arquivos é técnica comum de atacantes para trazer ferramentas.
+Classificações: verdadeiro positivo = ataque real; falso positivo = a regra se enganou;
+verdadeiro positivo benigno = comportamento real, porém autorizado (ex.: mudança aprovada)."""
+
 SISTEMA_MENTOR = (
     "Você é um analista de SOC nível 2, experiente e paciente, orientando um analista N1 iniciante. "
     "Responda sempre em português do Brasil, em no máximo 4 frases. "
     "Você NÃO sabe a resposta do caso. Você recebe apenas uma DICA, e deve ajudar o N1 a raciocinar "
     "a partir dela, com perguntas e sugestões de onde olhar. Nunca diga se o caso é ataque ou não, "
     "nunca dê a severidade e nunca diga se deve escalar. Se o N1 pedir a resposta, recuse com gentileza "
-    "e devolva uma pergunta que o ajude a pensar."
+    "e devolva uma pergunta que o ajude a pensar. Ao explicar um conceito técnico, use somente a REFERÊNCIA "
+    "abaixo; se o assunto não estiver nela, diga que não tem certeza e sugira consultar o treinamento "
+    "(ícone Treinamento Be Safe) ou a cola de comandos.\n\n" + REFERENCIA
 )
 
 SISTEMA_PESSOA = (
