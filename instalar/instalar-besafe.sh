@@ -7,6 +7,7 @@
 #
 # O que este script faz, em ordem:
 #   1. confere se o computador tem memória, disco e virtualização para a VM;
+#      se não houver VMware nem VirtualBox, oferece instalar o VirtualBox (apt ou Homebrew, só com o seu "sim");
 #   2. consulta o último release no GitHub;
 #   3. baixa as partes da OVA e o SHA256SUMS.txt (se a internet cair, rode de novo: ele continua de onde parou);
 #   4. confere o SHA-256 de cada parte e baixa de novo a que vier corrompida;
@@ -68,6 +69,45 @@ if [ "$SO" = Linux ]; then
   else aviso "não achei suporte a virtualização (VT-x/AMD-V). Confira se está ligada na BIOS (passo 1 do guia)."; fi
 fi
 
+achar_virtualizadores() {
+  OVFTOOL=""
+  for c in "$(command -v ovftool || true)" "/Applications/VMware Fusion.app/Contents/Library/VMware OVF Tool/ovftool"; do
+    [ -n "$c" ] && [ -x "$c" ] && { OVFTOOL=$c; break; }
+  done
+  VBOX=$(command -v VBoxManage || true)
+}
+achar_virtualizadores
+[ -z "$OVFTOOL" ] || ok "VMware encontrado"
+[ -z "$VBOX" ] || ok "VirtualBox encontrado"
+
+# sem nenhum programa de virtualizacao: oferece instalar o VirtualBox agora, antes do download longo
+if [ "$IMPORTAR" = 1 ] && [ -z "$OVFTOOL" ] && [ -z "$VBOX" ]; then
+  aviso "não encontrei o VMware nem o VirtualBox."
+  INSTALADOR=""
+  if [ "$SO" = Darwin ] && command -v brew >/dev/null; then INSTALADOR="brew install --cask virtualbox"
+  elif [ "$SO" = Linux ] && command -v apt-get >/dev/null; then INSTALADOR="sudo apt-get install -y virtualbox"; fi
+  if [ -z "$INSTALADOR" ]; then
+    echo "   Instale o VMware ou o VirtualBox e rode este script de novo. Vou continuar só com o download."
+  else
+    printf '   Instalar o VirtualBox (gratuito, da Oracle) agora com "%s"? [S/n] ' "$INSTALADOR"
+    read -r r
+    case "${r:-S}" in
+      [sSyY]*)
+        passo "Instalando o VirtualBox"
+        echo "   Ao continuar, você aceita a licença do VirtualBox (Oracle)."
+        $INSTALADOR || true
+        achar_virtualizadores
+        if [ -n "$VBOX" ]; then
+          ok "VirtualBox instalado"
+          if [ "$SO" = Linux ]; then
+            aviso "se o seu computador usa Secure Boot, o Ubuntu pode pedir para registrar uma chave (MOK) no próximo boot. Siga a tela azul e reinicie."
+          fi
+        else aviso "o VirtualBox não foi instalado. Vou continuar só com o download; depois importe a OVA manualmente."; fi
+        ;;
+    esac
+  fi
+fi
+
 # ------------------------------------------------------------------ 2. release
 passo "Consultando o release no GitHub"
 if [ "$VERSAO" = latest ]; then URL="$API/latest"; else URL="$API/tags/v$VERSAO"; fi
@@ -126,11 +166,6 @@ fi
 
 # ------------------------------------------------------------------ 6. importar
 NOME_VM="Be Safe SOC Lab $VER"
-OVFTOOL=""
-for c in "$(command -v ovftool || true)" "/Applications/VMware Fusion.app/Contents/Library/VMware OVF Tool/ovftool"; do
-  [ -n "$c" ] && [ -x "$c" ] && { OVFTOOL=$c; break; }
-done
-VBOX=$(command -v VBoxManage || true)
 
 ESCOLHA=nenhum
 if [ "$IMPORTAR" = 1 ]; then

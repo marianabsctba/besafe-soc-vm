@@ -51,7 +51,7 @@ Se aparecer **Desabilitado**, é preciso ligar na BIOS/UEFI do computador:
 
 ## 2. Instale um programa de virtualização
 
-Escolha **um**:
+Escolha **um**. Se você não tiver nenhum, o instalador automático (passo 3) **oferece instalar o VirtualBox** para você: no Windows pelo `winget`, no Ubuntu pelo `apt` e no Mac pelo Homebrew. O VMware precisa ser instalado na mão, porque o download exige cadastro no site da Broadcom.
 
 | Programa | Quando usar |
 |---|---|
@@ -66,7 +66,7 @@ Escolha **um**:
 
 ## 3. Jeito fácil: o instalador automático (recomendado)
 
-O instalador faz sozinho os passos chatos: confere se o seu computador aguenta, baixa as partes (e continua de onde parou se a internet cair), confere o hash de cada uma, baixa de novo a que vier corrompida, junta tudo numa OVA, confere a OVA e importa no VMware ou no VirtualBox. Se o seu computador tiver menos de 16 GB de RAM, ele já ajusta a VM para 5 GB.
+O instalador faz sozinho os passos chatos: confere se o seu computador aguenta, oferece instalar o VirtualBox se você ainda não tiver nenhum programa de virtualização, baixa as partes (e continua de onde parou se a internet cair), confere o hash de cada uma, baixa de novo a que vier corrompida, junta tudo numa OVA, confere a OVA e importa no VMware ou no VirtualBox. Se o seu computador tiver menos de 16 GB de RAM, ele já ajusta a VM para 5 GB.
 
 > [!IMPORTANT]
 > **Leia antes de rodar.** Copiar da internet um comando que baixa e já executa um script é exatamente o que um atacante quer que você faça. Por isso aqui é diferente: você baixa o script, **abre num editor de texto e lê** (ele é curto e comentado em português) e só então roda. Ele só baixa arquivos de dados do release; nada baixado da internet é executado. Pegue esse hábito para a vida, bebê: é o primeiro reflexo de quem trabalha com segurança.
@@ -101,7 +101,8 @@ Para usar outro disco: `bash instalar-besafe.sh --pasta /caminho/BeSafe`.
 
 - Se ele importou no **VMware**, a VM abre sozinha no VMware (ou fica na pasta que ele mostrar). Clique em **Power on**.
 - Se importou no **VirtualBox**, abra o VirtualBox, selecione **Be Safe SOC Lab** e clique em **Iniciar**.
-- Se não encontrou nenhum dos dois, ele avisa onde a OVA ficou: importe como no passo 4.4.
+- Se não encontrou nenhum dos dois e você não quis instalar o VirtualBox, ele avisa onde a OVA ficou: instale o VMware ou o VirtualBox e importe como no passo 4.4.
+- No Linux, se o computador usa **Secure Boot**, o Ubuntu pode pedir para registrar uma chave (MOK) ao instalar o VirtualBox. No próximo boot aparece uma tela azul: escolha **Enroll MOK**, digite a senha que você criou e reinicie.
 
 Agora pule para o **passo 5 (Primeiro boot)**.
 

@@ -9,6 +9,7 @@
 
   O que este script faz, em ordem:
     1. confere se o computador tem memória, disco e virtualização para a VM;
+       se não houver VMware nem VirtualBox, oferece instalar o VirtualBox pelo winget (só com o seu "sim");
     2. consulta o último release no GitHub;
     3. baixa as partes da OVA e o SHA256SUMS.txt (se a internet cair, rode de novo: ele continua de onde parou);
     4. confere o SHA-256 de cada parte e baixa de novo a que vier corrompida;
@@ -63,6 +64,43 @@ $virt = (Get-CimInstance Win32_Processor | Select-Object -First 1).Virtualizatio
 if ($hyperv) { Ok "virtualização ativa (Hyper-V ligado: prefira o VMware ao VirtualBox)" }
 elseif ($virt) { Ok "virtualização ligada na BIOS" }
 else { Aviso "a virtualização parece DESLIGADA na BIOS. A VM não vai ligar até você ativar (veja o passo 1 do guia)." }
+
+function Primeiro($caminhos) { $caminhos | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1 }
+function AcharVirtualizadores {
+  $pf86 = ${env:ProgramFiles(x86)}
+  $script:ovftool = Primeiro @("$pf86\VMware\VMware Workstation\OVFTool\ovftool.exe", "$pf86\VMware\VMware Player\OVFTool\ovftool.exe",
+                               "$env:ProgramFiles\VMware\VMware Workstation\OVFTool\ovftool.exe")
+  $script:vmware = Primeiro @("$pf86\VMware\VMware Workstation\vmware.exe", "$pf86\VMware\VMware Player\vmplayer.exe",
+                              "$env:ProgramFiles\VMware\VMware Workstation\vmware.exe")
+  $script:vbox = Primeiro @("$env:VBOX_MSI_INSTALL_PATH\VBoxManage.exe", "$env:ProgramFiles\Oracle\VirtualBox\VBoxManage.exe")
+}
+AcharVirtualizadores
+if ($ovftool) { Ok "VMware encontrado" }
+if ($vbox) { Ok "VirtualBox encontrado" }
+
+# sem nenhum programa de virtualizacao: oferece instalar o VirtualBox agora, antes do download longo
+if (-not $SemImportar -and -not $ovftool -and -not $vbox) {
+  Aviso "não encontrei o VMware nem o VirtualBox."
+  if ($hyperv) {
+    Write-Host "   Este computador usa Hyper-V (WSL, Docker Desktop). O VirtualBox fica muito lento nesse cenário."
+    Write-Host "   O recomendado é instalar o VMware Workstation Pro (gratuito, site da Broadcom) e rodar este script de novo."
+  }
+  if (-not (Get-Command winget.exe -ErrorAction SilentlyContinue)) {
+    Write-Host "   Instale o VMware ou o VirtualBox e rode este script de novo. Vou continuar só com o download."
+  } else {
+    $padrao = if ($hyperv) { "n" } else { "S" }
+    $r = Read-Host "   Instalar o VirtualBox (gratuito, da Oracle) agora pelo winget? O Windows vai pedir permissão de administrador. [S/n, padrão $padrao]"
+    if (-not $r) { $r = $padrao }
+    if ($r -match '^[sSyY]') {
+      Passo "Instalando o VirtualBox"
+      Write-Host "   Ao continuar, você aceita a licença do VirtualBox (Oracle) e os termos do winget."
+      & winget.exe install --id Oracle.VirtualBox --exact --silent --accept-package-agreements --accept-source-agreements
+      AcharVirtualizadores
+      if ($vbox) { Ok "VirtualBox instalado" }
+      else { Aviso "o VirtualBox não foi instalado. Vou continuar só com o download; depois importe a OVA manualmente." }
+    }
+  }
+}
 
 # ------------------------------------------------------------------ 2. release
 Passo "Consultando o release no GitHub"
@@ -133,13 +171,6 @@ else {
 }
 
 # ------------------------------------------------------------------ 6. importar
-function Primeiro($caminhos) { $caminhos | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1 }
-$pf86 = ${env:ProgramFiles(x86)}
-$ovftool = Primeiro @("$pf86\VMware\VMware Workstation\OVFTool\ovftool.exe", "$pf86\VMware\VMware Player\OVFTool\ovftool.exe",
-                      "$env:ProgramFiles\VMware\VMware Workstation\OVFTool\ovftool.exe")
-$vmware = Primeiro @("$pf86\VMware\VMware Workstation\vmware.exe", "$pf86\VMware\VMware Player\vmplayer.exe",
-                     "$env:ProgramFiles\VMware\VMware Workstation\vmware.exe")
-$vbox = Primeiro @("$env:VBOX_MSI_INSTALL_PATH\VBoxManage.exe", "$env:ProgramFiles\Oracle\VirtualBox\VBoxManage.exe")
 $nomeVm = "Be Safe SOC Lab $ver"
 
 $escolha = $null
