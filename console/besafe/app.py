@@ -5,13 +5,14 @@ Roda em 127.0.0.1:8080 (servico besafe-console). Os eventos dos cenarios sao gra
 """
 import hashlib
 import json
+import re
 import os
 import secrets
 import sqlite3
 import threading
 import time
 from contextlib import closing
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -19,7 +20,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import VERSAO, ia
+from . import VERSAO, certificado, ia
 from .motor import BRT, agora, carregar_cenarios, linha_json, montar_plantao
 from .mundo import gerar_mundo
 from .nota import avaliar, nota_do_plantao
@@ -30,6 +31,8 @@ ARQ_SEMENTE = ESTADO / "semente"
 BANCO = ESTADO / "console.db"
 ESTATICO = Path(__file__).resolve().parent / "static"
 BRANDING = Path(os.environ.get("BESAFE_BRANDING", "/usr/share/besafe/branding"))
+NOTA_MINIMA = 70          # nota da prova final que libera o certificado
+DURACAO_PROVA = 60        # minutos
 
 # ------------------------------------------------------------------ estado global
 def _semente() -> int:
@@ -64,7 +67,12 @@ def criar_tabelas():
         CREATE TABLE IF NOT EXISTS tickets (
             caso TEXT PRIMARY KEY, dados TEXT, avaliacao TEXT, criado_em TEXT);
         CREATE TABLE IF NOT EXISTS dicas_usadas (caso TEXT PRIMARY KEY, nivel INTEGER);
+        CREATE TABLE IF NOT EXISTS certificados (
+            plantao INTEGER PRIMARY KEY, nome TEXT, nota INTEGER, hash TEXT, arquivo TEXT, emitido_em TEXT);
         """)
+        colunas = {r["name"] for r in con.execute("PRAGMA table_info(plantoes)")}
+        if "modo_prova" not in colunas:
+            con.execute("ALTER TABLE plantoes ADD COLUMN modo_prova INTEGER DEFAULT 0")
 
 
 def plantao_ativo():
@@ -123,6 +131,7 @@ def iniciar():
 
 class NovoPlantao(BaseModel):
     duracao_min: int = Field(60, ge=15, le=240)
+    modo_prova: bool = False
 
 
 @app.get("/api/estado")
@@ -130,20 +139,27 @@ def estado():
     p = plantao_ativo()
     with closing(db()) as con:
         historico = [dict(x) for x in con.execute(
-            "SELECT numero, inicio, encerrado_em, resultado FROM plantoes WHERE encerrado_em IS NOT NULL ORDER BY numero DESC")]
+            "SELECT numero, inicio, encerrado_em, resultado, modo_prova FROM plantoes "
+            "WHERE encerrado_em IS NOT NULL ORDER BY numero DESC")]
+        emitidos = {r["plantao"]: dict(r) for r in con.execute("SELECT plantao, nome, nota, hash FROM certificados")}
     for h in historico:
         h["resultado"] = json.loads(h["resultado"] or "{}")
+        h["modo_prova"] = bool(h["modo_prova"])
+        h["aprovado"] = h["modo_prova"] and h["resultado"].get("media", 0) >= NOTA_MINIMA
+        h["certificado"] = emitidos.get(h["numero"])
     if not p:
-        return {"plantao": None, "historico": historico, "ia": ia.disponivel(), "versao": VERSAO}
+        return {"plantao": None, "historico": historico, "ia": ia.disponivel(), "versao": VERSAO,
+                "nota_minima": NOTA_MINIMA}
     todos = casos_do_plantao(p["numero"])
     entregues = casos_do_plantao(p["numero"], so_entregues=True)
     with closing(db()) as con:
         com_ticket = {r["caso"] for r in con.execute("SELECT caso FROM tickets")}
     return {
         "plantao": {"numero": p["numero"], "inicio": p["inicio"], "fim_previsto": p["fim_previsto"],
+                    "modo_prova": bool(p["modo_prova"]),
                     "casos_total": len(todos), "casos_chegaram": len(entregues),
                     "tickets": len([c for c in todos if c["id"] in com_ticket])},
-        "historico": historico, "ia": ia.disponivel(), "versao": VERSAO,
+        "historico": historico, "ia": ia.disponivel(), "versao": VERSAO, "nota_minima": NOTA_MINIMA,
     }
 
 
@@ -155,10 +171,12 @@ def iniciar_plantao(dados: NovoPlantao):
         ultimo = con.execute("SELECT MAX(numero) AS n FROM plantoes").fetchone()["n"] or 0
     numero = ultimo + 1
     inicio = agora()
-    casos = montar_plantao(CENARIOS, MUNDO, numero, inicio, duracao_min=dados.duracao_min)
+    duracao = DURACAO_PROVA if dados.modo_prova else dados.duracao_min
+    casos = montar_plantao(CENARIOS, MUNDO, numero, inicio, duracao_min=duracao)
     with closing(db()) as con, con:
-        con.execute("INSERT INTO plantoes (numero, inicio, fim_previsto) VALUES (?,?,?)",
-                    (numero, inicio.isoformat(), (inicio + timedelta(minutes=dados.duracao_min)).isoformat()))
+        con.execute("INSERT INTO plantoes (numero, inicio, fim_previsto, modo_prova) VALUES (?,?,?,?)",
+                    (numero, inicio.isoformat(), (inicio + timedelta(minutes=duracao)).isoformat(),
+                     int(dados.modo_prova)))
         for c in casos:
             con.execute("INSERT INTO casos VALUES (?,?,?,?,?,?,?,?)",
                         (c.id, numero, c.cenario, c.titulo, json.dumps(c.verdade, ensure_ascii=False),
@@ -166,7 +184,7 @@ def iniciar_plantao(dados: NovoPlantao):
                          c.eventos[0][0].isoformat()))
             con.executemany("INSERT INTO eventos (caso, quando, corpo) VALUES (?,?,?)",
                             [(c.id, q.isoformat(), json.dumps(corpo, ensure_ascii=False)) for q, corpo in c.eventos])
-    return {"numero": numero, "casos": len(casos), "duracao_min": dados.duracao_min}
+    return {"numero": numero, "casos": len(casos), "duracao_min": duracao, "modo_prova": dados.modo_prova}
 
 
 @app.post("/api/plantao/encerrar")
@@ -180,6 +198,10 @@ def encerrar_plantao():
             "SELECT caso, avaliacao FROM tickets WHERE caso IN (%s)" % ",".join("?" * len(casos)),
             [c["id"] for c in casos])}
         resultado = nota_do_plantao([c["id"] for c in casos], avaliacoes)
+        resultado["numero"] = p["numero"]
+        resultado["modo_prova"] = bool(p["modo_prova"])
+        resultado["aprovado"] = resultado["modo_prova"] and resultado["media"] >= NOTA_MINIMA
+        resultado["nota_minima"] = NOTA_MINIMA
         resultado["detalhes"] = [{
             "caso": c["id"], "titulo": c["titulo"], "verdade": json.loads(c["verdade"]),
             "avaliacao": avaliacoes.get(c["id"])} for c in casos]
@@ -300,6 +322,13 @@ def intel(valor: str):
 
 
 # ------------------------------------------------------------------ IA
+def _bloquear_na_prova(c):
+    with closing(db()) as con:
+        p = con.execute("SELECT modo_prova, encerrado_em FROM plantoes WHERE numero=?", (c["plantao"],)).fetchone()
+    if p and p["modo_prova"] and p["encerrado_em"] is None:
+        raise HTTPException(403, "Assistentes desligados durante a prova final. Você consegue!")
+
+
 class Pergunta(BaseModel):
     caso: str
     texto: str = ""
@@ -309,6 +338,7 @@ class Pergunta(BaseModel):
 @app.post("/api/mentor")
 def mentor(p: Pergunta):
     c = caso(p.caso.strip().upper())
+    _bloquear_na_prova(c)
     dicas = json.loads(c["dicas"])
     with closing(db()) as con, con:
         linha = con.execute("SELECT nivel FROM dicas_usadas WHERE caso=?", (c["id"],)).fetchone()
@@ -327,6 +357,7 @@ def mentor(p: Pergunta):
 @app.post("/api/pessoa")
 def pessoa(p: Pergunta):
     c = caso(p.caso.strip().upper())
+    _bloquear_na_prova(c)
     ficha = json.loads(c["extras"]).get("pessoa")
     if not ficha:
         raise HTTPException(404, "Não há ninguém para entrevistar neste caso.")
@@ -338,6 +369,7 @@ def pessoa(p: Pergunta):
 @app.get("/api/copiloto/{cid}")
 def copiloto(cid: str):
     c = caso(cid.strip().upper())
+    _bloquear_na_prova(c)
     with closing(db()) as con:
         eventos = [json.loads(r["corpo"]) for r in con.execute(
             "SELECT corpo FROM eventos WHERE caso=? AND enviado=1 ORDER BY quando LIMIT 8", (c["id"],))]
@@ -349,6 +381,47 @@ def copiloto(cid: str):
                          max_tokens=300, temperatura=0.1)
     return {"caso": c["id"], "resumo": texto, "ia": texto is not None,
             "aviso": "O copiloto resume os campos dos eventos. Confira sempre o evento bruto no Wazuh."}
+
+
+# ------------------------------------------------------------------ certificado
+NOME_VALIDO = re.compile(r"^[^\W\d_]+(?:[ '.-][^\W\d_]+)*$")
+
+
+class PedidoCertificado(BaseModel):
+    plantao: int
+    nome: str = Field(min_length=3, max_length=60)
+
+
+@app.post("/api/certificado")
+def emitir_certificado(pedido: PedidoCertificado):
+    nome = " ".join(pedido.nome.split())
+    if not NOME_VALIDO.match(nome):
+        raise HTTPException(400, "Use só letras, espaços, apóstrofo, ponto e hífen no nome.")
+    with closing(db()) as con, con:
+        p = con.execute("SELECT * FROM plantoes WHERE numero=? AND encerrado_em IS NOT NULL",
+                        (pedido.plantao,)).fetchone()
+        if not p or not p["modo_prova"]:
+            raise HTTPException(404, "O certificado é emitido a partir de uma prova final encerrada.")
+        nota = json.loads(p["resultado"] or "{}").get("media", 0)
+        if nota < NOTA_MINIMA:
+            raise HTTPException(403, f"A nota mínima para o certificado é {NOTA_MINIMA}. Faça uma nova prova final.")
+        arquivo = ESTADO / "certificados" / f"certificado-plantao-{p['numero']}.png"
+        emissao = date.fromisoformat(p["encerrado_em"][:10])
+        info = certificado.gerar(nome, nota, p["numero"], SEMENTE, arquivo, emissao=emissao)
+        con.execute("INSERT OR REPLACE INTO certificados VALUES (?,?,?,?,?,?)",
+                    (p["numero"], info["nome"], nota, info["hash"], str(arquivo), agora().isoformat()))
+    info.pop("arquivo", None)
+    return {**info, "url": f"/api/certificado/{p['numero']}.png"}
+
+
+@app.get("/api/certificado/{numero}.png")
+def baixar_certificado(numero: int):
+    with closing(db()) as con:
+        r = con.execute("SELECT arquivo FROM certificados WHERE plantao=?", (numero,)).fetchone()
+    if not r or not Path(r["arquivo"]).exists():
+        raise HTTPException(404, "Certificado ainda não emitido.")
+    return FileResponse(r["arquivo"], media_type="image/png",
+                        filename=f"certificado-besafe-soc-lab-{numero}.png")
 
 
 # ------------------------------------------------------------------ paginas e artes

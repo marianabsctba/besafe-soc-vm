@@ -16,6 +16,7 @@
 - **Treinamento completo, para quem está começando, sem ser raso.** São 14 módulos: terminal, redes, Windows pelos logs, fundamentos de SOC, Wazuh, Suricata e Wireshark, caça em logs, phishing, CyberChef/YARA/Sigma, ticket e plantão, **LGPD para o N1**, um caso final e o plantão simulado. Cada conceito é explicado do zero, com o *porquê*, os erros comuns de iniciante e o ponto de vista do atacante.
 - **Dados reais.** Centenas de logs gravados durante ataques reais a Windows, alertas gerados ao vivo no próprio Wazuh, tráfego capturado e analisado pelo Suricata. Cada comando do treinamento foi testado nesta VM.
 - **Plantão simulado com nota.** Os alertas chegam ao Wazuh ao longo do tempo, misturando ataques e ruído. O aluno investiga, abre tickets no Console Be Safe e recebe nota com gabarito comentado. Cada cópia da VM gera casos diferentes.
+- **Prova final e certificado.** Uma prova de 60 minutos sem assistentes. Com nota 70 ou mais, o Console gera um certificado em PNG com o nome do aluno, o conceito e um código SHA-256.
 - **IA local, sem internet.** Um mentor N2 que **não conhece a resposta** (só ajuda a pensar), entrevista com pessoas envolvidas e um copiloto que pode ser enganado por **injeção de prompt**, como num SOC de verdade.
 - **Contexto brasileiro.** Fraude de boleto, phishing de fornecedor, golpes por mensageiro e o módulo de **LGPD**: quando um incidente com dados pessoais vira obrigação de comunicar à ANPD, e o que o N1 deve fazer.
 
@@ -107,8 +108,8 @@ O build usa [Packer](https://developer.hashicorp.com/packer). O Ansible roda **d
 sudo apt install qemu-system-x86 qemu-utils
 packer init packer
 packer build -only=qemu.besafe -var saida=$HOME/out packer
-bash packer/scripts/empacotar.sh $HOME/out/qemu-besafe-soc-lab-0.1.0/besafe-soc-lab-0.1.0.qcow2 vmware/ 0.1.0
-ovftool --acceptAllEulas --compress=9 vmware/besafe-soc-lab-0.1.0.vmx besafe-soc-lab-0.1.0.ova
+bash packer/scripts/empacotar.sh $HOME/out/qemu-besafe-soc-lab-0.2.0/besafe-soc-lab-0.2.0.qcow2 vmware/ 0.2.0
+ovftool --acceptAllEulas --compress=9 vmware/besafe-soc-lab-0.2.0.vmx besafe-soc-lab-0.2.0.ova
 ```
 
 **VirtualBox:** `packer build -only=virtualbox-iso.besafe packer`. Funciona em hosts **sem** Hyper-V. No Windows com WSL ou Docker (Hyper-V ativo), o VirtualBox trava durante a instalação; use o caminho do QEMU.

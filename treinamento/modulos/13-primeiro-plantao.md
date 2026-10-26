@@ -109,6 +109,16 @@ A VM tem uma IA que roda **dentro dela**, sem internet. Ela é pequena e leva al
 - Uma pessoa **de férias** fazendo alterações administrativas é uma das bandeiras vermelhas mais claras que existem.
 - Escreva o resumo como se o N2 fosse ler às 3h da manhã.
 
+## 7. Prova final e certificado
+
+Quando os plantões de treino estiverem saindo bem, faça a **prova final**. No Console, em **Plantão**, escolha o tipo **Prova final** antes de iniciar.
+
+- A prova dura **60 minutos** e funciona como um plantão normal: os casos chegam ao Wazuh, você investiga e registra um ticket por caso.
+- O **mentor**, a **entrevista** e o **copiloto** ficam desligados. As abas Diretório, Inventário, Mudanças, Phishing reportado e Intel continuam disponíveis, como num SOC de verdade.
+- A nota é calculada do mesmo jeito do treino. Com **70 ou mais**, o Console libera o **certificado em PNG**: digite seu nome como deve aparecer e clique em **Gerar certificado**. De 70 a 89 o conceito é **Aprovado**; de 90 a 100, **Aprovado com distinção**.
+- Abaixo de 70, leia o gabarito comentado, volte aos módulos dos critérios em que perdeu pontos e faça uma nova prova. Os casos mudam a cada plantão.
+- O certificado traz um código **SHA-256** calculado a partir do nome, da nota, da data e do plantão. Ele identifica aquela emissão; o arquivo fica salvo no Console e pode ser baixado de novo pelo histórico.
+
 ## Checagem
 
 1. O que acontece com a nota de um caso que fica sem ticket?

@@ -52,3 +52,11 @@ th { color: var(--rosa-claro); background: var(--superficie2); position: sticky;
 .veredito-desconhecido, .veredito-interno, .veredito-sem { color: var(--mudo); }
 footer { text-align: right; padding: 12px 24px; color: var(--rosa-claro); font-weight: 700; }
 code { background: var(--superficie2); padding: 1px 5px; border-radius: 4px; }
+
+/* prova final e certificado */
+.selo-prova { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px;
+  background: linear-gradient(90deg, #b8860b, #f5d27a); color: #1a1208; vertical-align: middle; }
+.certificado { margin: 14px 0 18px; padding: 14px; border: 1px solid #c9a227; border-radius: 10px; }
+.linha-cert { display: flex; gap: 10px; flex-wrap: wrap; }
+.linha-cert input { flex: 1; min-width: 220px; }
+.certificado img { width: 100%; max-width: 900px; margin-top: 12px; border-radius: 6px; display: block; }

@@ -56,11 +56,19 @@ async function carregarPlantao() {
         <p>Ao iniciar, os casos vão chegar ao Wazuh ao longo do tempo, misturando ataques e ruído.
         Trabalhe a fila no Wazuh (Threat Hunting) e registre um ticket por caso aqui no Console.
         A nota sai quando você encerrar o plantão.</p>
-        <label>Duração <select id="duracao"><option value="30">30 minutos</option><option value="60" selected>60 minutos</option><option value="120">2 horas</option></select></label>
+        <label>Tipo <select id="tipo">
+          <option value="treino" selected>Plantão de treino (assistentes ligados)</option>
+          <option value="prova">Prova final (60 minutos, sem assistentes, vale certificado)</option></select></label>
+        <label id="rotulo-duracao">Duração <select id="duracao"><option value="30">30 minutos</option><option value="60" selected>60 minutos</option><option value="120">2 horas</option></select></label>
+        <p class="ajuda">Na prova final, nota ${e.nota_minima} ou mais libera o certificado em PNG.</p>
         <button id="btn-iniciar">Iniciar plantão</button>
       </div>`;
+    $("#tipo").onchange = () => { $("#rotulo-duracao").style.display = $("#tipo").value === "prova" ? "none" : ""; };
     $("#btn-iniciar").onclick = async () => {
-      await api("/api/plantao/iniciar", { method: "POST", body: JSON.stringify({ duracao_min: +$("#duracao").value }) });
+      const prova = $("#tipo").value === "prova";
+      if (prova && !confirm("Iniciar a prova final? São 60 minutos e o mentor, a entrevista e o copiloto ficam desligados.")) return;
+      await api("/api/plantao/iniciar", { method: "POST",
+        body: JSON.stringify({ duracao_min: +$("#duracao").value, modo_prova: prova }) });
       $("#plantao-resultado").innerHTML = "";
       carregarPlantao();
     };
@@ -69,7 +77,8 @@ async function carregarPlantao() {
     const pct = Math.min(100, Math.round(((Date.now() - ini) / (fim - ini)) * 100));
     $("#plantao-estado").innerHTML = `
       <div class="cartao estreito">
-        <h3>Plantão ${p.numero} em andamento</h3>
+        <h3>${p.modo_prova ? '<span class="selo-prova">Prova final</span> ' : ""}Plantão ${p.numero} em andamento</h3>
+        ${p.modo_prova ? '<p class="ajuda">Assistentes desligados. Nota mínima para o certificado: ' + e.nota_minima + "/100.</p>" : ""}
         <p>Início ${hora(p.inicio)} · término previsto ${hora(p.fim_previsto)}</p>
         <div class="barra"><div style="width:${pct}%"></div></div>
         <p><b>${p.casos_chegaram}</b> de ${p.casos_total} casos já chegaram ao Wazuh · <b>${p.tickets}</b> com ticket</p>
@@ -84,18 +93,48 @@ async function carregarPlantao() {
     };
   }
   // sem plantao ativo, mostra o resultado do ultimo plantao encerrado
-  if (!p && e.historico.length && !$("#plantao-resultado").innerHTML.trim()) mostrarResultado(e.historico[0].resultado);
+  if (!p && e.historico.length && !$("#plantao-resultado").innerHTML.trim()) {
+    const h = e.historico[0];
+    mostrarResultado({ ...h.resultado, numero: h.numero, modo_prova: h.modo_prova, aprovado: h.aprovado,
+                       nota_minima: e.nota_minima }, h.certificado);
+  }
   $("#historico").innerHTML = e.historico.length
-    ? tabela([["numero", "Plantão"], ["inicio", "Início", hora], ["resultado", "Nota", (r) => `${r.media ?? "-"}/100`],
-              ["resultado", "Casos", (r) => `${r.com_ticket ?? 0} de ${r.casos ?? 0} com ticket`]], e.historico)
+    ? tabela([["numero", "Plantão"], ["modo_prova", "Tipo", (v) => (v ? "Prova final" : "Treino")],
+              ["inicio", "Início", hora], ["resultado", "Nota", (r) => `${r.media ?? "-"}/100`],
+              ["resultado", "Casos", (r) => `${r.com_ticket ?? 0} de ${r.casos ?? 0} com ticket`],
+              ["certificado", "Certificado", (c) => (c ? `<a href="/api/certificado/${c.plantao}.png" download>baixar</a>` : "-")]],
+             e.historico)
     : '<p class="ajuda">Nenhum plantão encerrado ainda.</p>';
 }
 
-function mostrarResultado(r) {
+function blocoCertificado(r, emitido) {
+  if (!r.modo_prova) return "";
+  if (!r.aprovado)
+    return `<p class="msg erro">Prova final abaixo de ${r.nota_minima}/100. Revise o gabarito abaixo e faça uma nova prova quando quiser.</p>`;
+  return `
+    <div class="certificado">
+      <p><b>Prova final aprovada!</b> Escreva seu nome como deve aparecer no certificado.</p>
+      <div class="linha-cert">
+        <input id="cert-nome" maxlength="60" placeholder="Seu nome completo" value="${esc(emitido?.nome || "")}">
+        <button id="cert-gerar">${emitido ? "Gerar de novo" : "Gerar certificado"}</button>
+      </div>
+      <p id="cert-msg" class="msg"></p>
+      <div id="cert-saida">${emitido ? imagemCertificado(r.numero, emitido.hash) : ""}</div>
+    </div>`;
+}
+
+function imagemCertificado(numero, hash) {
+  const url = `/api/certificado/${numero}.png?v=${hash.slice(0, 8)}`;
+  return `<a href="${url}" download="certificado-besafe-soc-lab.png"><img src="${url}" alt="Certificado"></a>
+    <p class="ajuda">SHA-256: <code>${esc(hash)}</code> · <a href="${url}" download="certificado-besafe-soc-lab.png">Baixar PNG</a></p>`;
+}
+
+function mostrarResultado(r, emitido) {
   $("#plantao-resultado").innerHTML = `
     <div class="cartao">
-      <h3>Resultado do plantão</h3>
+      <h3>Resultado ${r.modo_prova ? "da prova final" : "do plantão"}</h3>
       <div class="grande">${r.media}/100</div>
+      ${blocoCertificado(r, emitido)}
       <p>${r.com_ticket} de ${r.casos} casos com ticket.${r.perdidos.length ? ` Sem ticket (alertas perdidos): <b>${r.perdidos.join(", ")}</b>.` : ""}</p>
       ${r.detalhes.map((d) => `
         <div class="item-ticket">
@@ -105,6 +144,19 @@ function mostrarResultado(r) {
           ${d.avaliacao ? `<b>${d.avaliacao.total}/100</b><ul>${d.avaliacao.itens.map((i) => `<li>${esc(i.comentario)} (${i.pontos})</li>`).join("")}</ul>` : "<b>0/100</b> · sem ticket"}
         </div>`).join("")}
     </div>`;
+  const gerar = $("#cert-gerar");
+  if (gerar) gerar.onclick = async () => {
+    const msg = $("#cert-msg");
+    gerar.disabled = true; msg.className = "msg"; msg.textContent = "Gerando o certificado...";
+    try {
+      const c = await api("/api/certificado", { method: "POST",
+        body: JSON.stringify({ plantao: r.numero, nome: $("#cert-nome").value }) });
+      msg.className = "msg ok"; msg.textContent = `Certificado emitido: ${c.conceito}.`;
+      $("#cert-saida").innerHTML = imagemCertificado(r.numero, c.hash);
+      carregarPlantao();
+    } catch (e) { msg.className = "msg erro"; msg.textContent = e.message; }
+    gerar.disabled = false;
+  };
 }
 
 // ---------------------------------------------------------------- tickets

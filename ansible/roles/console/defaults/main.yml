@@ -6,6 +6,7 @@ console_porta: 8080
 console_src: /tmp/besafe-console
 console_pip:
   - fastapi==0.115.6
+  - pillow==11.0.0
   - uvicorn==0.32.1
   - pyyaml==6.0.2
 
