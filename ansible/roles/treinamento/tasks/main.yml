@@ -1,0 +1,10 @@
+# Treinamento em HTML (offline) e pasta de labs do aluno
+
+- name: material do treinamento presente?
+  ansible.builtin.stat:
+    path: "{{ treinamento_src }}/build_html.py"
+  register: treinamento_material
+
+- name: instalar treinamento
+  ansible.builtin.include_tasks: instalar.yml
+  when: treinamento_material.stat.exists

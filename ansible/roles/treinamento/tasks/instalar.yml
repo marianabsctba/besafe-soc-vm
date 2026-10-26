@@ -1,0 +1,72 @@
+# Chamado por main.yml quando o material do treinamento foi enviado
+- name: gerador de HTML
+  ansible.builtin.apt:
+    name: python3-markdown
+    state: present
+
+- name: gerar paginas do treinamento
+  ansible.builtin.command:
+    cmd: >-
+      python3 {{ treinamento_src }}/build_html.py
+      --saida {{ treinamento_dir }} --logo {{ branding_dir }}/icone-128.png
+  changed_when: true
+
+- name: labs do aluno
+  ansible.builtin.copy:
+    src: "{{ treinamento_src }}/labs/"
+    dest: "/home/{{ besafe_usuario }}/labs/"
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    mode: u=rwX,g=rX,o=
+
+- name: atalho para o acervo de EVTX nos labs
+  ansible.builtin.file:
+    src: /opt/besafe/chainsaw/EVTX-ATTACK-SAMPLES
+    dest: "/home/{{ besafe_usuario }}/labs/EVTX-ATTACK-SAMPLES"
+    state: link
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    force: true
+
+- name: area de trabalho do aluno
+  ansible.builtin.file:
+    path: "/home/{{ besafe_usuario }}/Desktop"
+    state: directory
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    mode: "0755"
+  when: besafe_desktop | bool
+
+- name: icones da area de trabalho
+  ansible.builtin.copy:
+    dest: "/home/{{ besafe_usuario }}/Desktop/{{ item.arquivo }}"
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    mode: "0755"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name={{ item.nome }}
+      Comment={{ item.comentario }}
+      Exec=firefox {{ item.url }}
+      Icon={{ branding_dir }}/icone-128.png
+      Terminal=false
+  loop:
+    - { arquivo: treinamento-besafe.desktop, nome: Treinamento Be Safe, comentario: Do zero ao primeiro plantao, url: "{{ treinamento_dir }}/index.html" }
+    - { arquivo: wazuh.desktop, nome: Wazuh, comentario: SIEM do laboratorio, url: "https://localhost" }
+    - { arquivo: cyberchef.desktop, nome: CyberChef, comentario: Decodificacao offline, url: /opt/besafe/cyberchef/index.html }
+  when: besafe_desktop | bool
+
+# o XFCE so executa atalhos .desktop marcados como confiaveis
+- name: marcar icones como confiaveis
+  ansible.builtin.shell: |
+    for f in /home/{{ besafe_usuario }}/Desktop/*.desktop; do
+      gio set "$f" metadata::trusted true 2>/dev/null || true
+      sha=$(sha256sum "$f" | cut -d' ' -f1)
+      gio set "$f" metadata::xfce-exe-checksum "$sha" 2>/dev/null || true
+    done
+  become: true
+  become_user: "{{ besafe_usuario }}"
+  changed_when: false
+  failed_when: false
+  when: besafe_desktop | bool

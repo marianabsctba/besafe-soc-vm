@@ -1,13 +1,21 @@
-# Build da VM Be Safe SOC Lab: Ubuntu 24.04 + XFCE + Wazuh, exportada como OVA.
+# Build da VM Be Safe SOC Lab: Ubuntu 24.04 + XFCE + Wazuh.
 # Uso (na raiz do repositorio):
 #   packer init packer
-#   packer build packer
+#   packer build -only=qemu.besafe packer           # Linux com KVM (recomendado; veja scripts/empacotar.sh)
+#   packer build -only=virtualbox-iso.besafe packer  # VirtualBox em host SEM Hyper-V
+#
+# VirtualBox sobre Hyper-V (Windows com WSL ou Docker) trava durante a instalacao;
+# nesse caso use o QEMU dentro do WSL.
 
 packer {
   required_plugins {
     virtualbox = {
       source  = "github.com/hashicorp/virtualbox"
       version = ">= 1.1.1"
+    }
+    qemu = {
+      source  = "github.com/hashicorp/qemu"
+      version = ">= 1.1.0"
     }
     ansible = {
       source  = "github.com/hashicorp/ansible"
@@ -41,6 +49,12 @@ variable "cpus" {
   default = 4
 }
 
+# onde a VM e montada e a OVA sai (o disco cresce ate disco_mb durante o build)
+variable "saida" {
+  type    = string
+  default = "output-besafe"
+}
+
 variable "disco_mb" {
   type    = number
   default = 61440
@@ -54,8 +68,52 @@ variable "build_usuario" {
 
 variable "build_senha" {
   type      = string
-  default   = "besafe-build"
+  default   = "tmp-build-2026"
   sensitive = true
+}
+
+locals {
+  # o instalador le o autoinstall do servidor HTTP do proprio Packer
+  http_content = {
+    "/user-data" = templatefile("${abspath(path.root)}/http/user-data.pkrtpl", {
+      usuario = var.build_usuario
+      senha   = var.build_senha
+    })
+    "/meta-data" = ""
+  }
+  boot_command = [
+    "c<wait>",
+    "linux /casper/vmlinuz --- autoinstall ds='nocloud;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/'<enter><wait>",
+    "initrd /casper/initrd<enter><wait>",
+    "boot<enter>"
+  ]
+  desligar = "echo '${var.build_senha}' | sudo -S shutdown -P now"
+}
+
+source "qemu" "besafe" {
+  vm_name          = "besafe-soc-lab-${var.versao}.qcow2"
+  iso_url          = var.iso_url
+  iso_checksum     = var.iso_checksum
+  accelerator      = "kvm"
+  memory           = var.memoria_mb
+  cpus             = var.cpus
+  disk_size        = "${var.disco_mb}M"
+  disk_interface   = "virtio"
+  net_device       = "virtio-net"
+  format           = "qcow2"
+  disk_compression = true
+  headless         = true
+  output_directory = "${var.saida}/qemu-besafe-soc-lab-${var.versao}"
+
+  http_content = local.http_content
+  boot_wait    = "5s"
+  boot_command = local.boot_command
+
+  ssh_username           = var.build_usuario
+  ssh_password           = var.build_senha
+  ssh_timeout            = "90m"
+  ssh_handshake_attempts = 500
+  shutdown_command       = local.desligar
 }
 
 source "virtualbox-iso" "besafe" {
@@ -69,34 +127,33 @@ source "virtualbox-iso" "besafe" {
   hard_drive_interface = "sata"
   gfx_controller       = "vmsvga"
   gfx_vram_size        = 64
-  firmware             = "efi"
-  headless             = true
+  # BIOS e nao EFI: o VMware ignora a marcacao de EFI que o VirtualBox grava na OVA
+  firmware = "bios"
+  headless = true
+  # os pacotes de guest do Ubuntu ja vem pela role base; a ISO so incharia a imagem
+  guest_additions_mode = "disable"
   format               = "ova"
-  output_directory     = "output-besafe-${var.versao}"
+  output_directory     = "${var.saida}/besafe-soc-lab-${var.versao}"
 
-  # o instalador le o autoinstall do servidor HTTP do proprio Packer
-  http_content = {
-    "/user-data" = templatefile("${abspath(path.root)}/http/user-data.pkrtpl", {
-      usuario = var.build_usuario
-      senha   = var.build_senha
-    })
-    "/meta-data" = ""
-  }
-  boot_wait = "5s"
-  boot_command = [
-    "c<wait>",
-    "linux /casper/vmlinuz --- autoinstall ds='nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/'<enter><wait>",
-    "initrd /casper/initrd<enter><wait>",
-    "boot<enter>"
-  ]
+  http_content = local.http_content
+  boot_wait    = "5s"
+  boot_command = local.boot_command
 
-  ssh_username     = var.build_usuario
-  ssh_password     = var.build_senha
-  ssh_timeout      = "60m"
-  shutdown_command = "echo '${var.build_senha}' | sudo -S shutdown -P now"
+  ssh_username = var.build_usuario
+  ssh_password = var.build_senha
+  ssh_timeout  = "90m"
+  # o instalador do Ubuntu tambem abre SSH e recusa a senha; o Packer nao pode desistir
+  ssh_handshake_attempts = 500
+  shutdown_command       = local.desligar
 
   vboxmanage = [
-    ["modifyvm", "{{ .Name }}", "--nat-localhostreqs1", "on"],
+    # disco primeiro: depois de instalar, a VM nao pode ligar pela ISO de novo
+    ["modifyvm", "{{ .Name }}", "--boot1", "disk", "--boot2", "dvd", "--boot3", "none", "--boot4", "none"],
+    ["modifyvm", "{{ .Name }}", "--audio-enabled", "off"],
+    # VirtualBox sobre Hyper-V (comum com WSL/Docker) trava o kernel no teste de AVX do raid6;
+    # sem AVX o boot passa e o custo para o lab e desprezivel
+    ["setextradata", "{{ .Name }}", "VBoxInternal/CPUM/IsaExts/AVX", "0"],
+    ["setextradata", "{{ .Name }}", "VBoxInternal/CPUM/IsaExts/AVX2", "0"],
     ["modifyvm", "{{ .Name }}", "--clipboard-mode", "bidirectional"],
   ]
   export_opts = [
@@ -110,22 +167,32 @@ source "virtualbox-iso" "besafe" {
 }
 
 build {
-  sources = ["source.virtualbox-iso.besafe"]
+  sources = ["source.qemu.besafe", "source.virtualbox-iso.besafe"]
 
   # Ansible roda dentro da VM (ansible-local): o host nao precisa ter Ansible
   provisioner "shell" {
     execute_command = "echo '${var.build_senha}' | {{ .Vars }} sudo -S -E bash '{{ .Path }}'"
     inline = [
+      # destino das artes precisa existir e ser do usuario do build (o upload e por scp)
+      "install -d -o ${var.build_usuario} -g ${var.build_usuario} /tmp/besafe-branding /tmp/besafe-treinamento",
       "apt-get update",
-      "DEBIAN_FRONTEND=noninteractive apt-get install -y ansible-core python3-pil rsync",
-      "ansible-galaxy collection install ansible.posix community.general",
+      # o pacote "ansible" ja traz community.general e ansible.posix; ansible-galaxy aqui
+      # rodaria como root e deixaria ~/.ansible do usuario do build sem permissao
+      "DEBIAN_FRONTEND=noninteractive apt-get install -y ansible python3-pil rsync",
     ]
   }
 
   # o diretorio branding fica fora do playbook_dir; sobe separado antes do ansible
   provisioner "file" {
-    source      = "${path.root}/../branding"
+    # barra no fim: sobe o conteudo da pasta, nao a pasta dentro do destino
+    source      = "${path.root}/../branding/"
     destination = "/tmp/besafe-branding"
+    direction   = "upload"
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/../treinamento/"
+    destination = "/tmp/besafe-treinamento"
     direction   = "upload"
   }
 

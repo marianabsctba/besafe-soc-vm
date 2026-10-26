@@ -6,4 +6,7 @@
     - base
     - branding
     - wazuh
+    # depois do Wazuh: integra os alertas do Suricata no ossec.conf
+    - ferramentas
+    - treinamento
     - primeiro_boot

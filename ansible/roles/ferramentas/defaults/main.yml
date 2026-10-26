@@ -1,0 +1,21 @@
+ferramentas_dir: /opt/besafe
+
+# versoes fixas com checksum publicado pelo proprio projeto no GitHub
+hayabusa_versao: "4.2.0"
+hayabusa_url: "https://github.com/Yamato-Security/hayabusa/releases/download/v{{ hayabusa_versao }}/hayabusa-{{ hayabusa_versao }}-lin-x64-gnu.zip"
+hayabusa_sha256: 955d483adf2e952cdeed06a4057b81acd11dd8c208e18f1f5c8eb37cc09b6d1c
+
+chainsaw_versao: "2.17.1"
+# pacote com regras Sigma, mapeamentos e EVTX de exemplo (usados nos labs)
+chainsaw_url: "https://github.com/WithSecureOpenSource/chainsaw/releases/download/v{{ chainsaw_versao }}/chainsaw_all_platforms+rules+examples.zip"
+chainsaw_sha256: 4ee006a4855f002ee961cfa041737d2ef423de9164ffefaff986f431d9fba83b
+
+cyberchef_versao: "11.5.0"
+cyberchef_url: "https://github.com/gchq/CyberChef/releases/download/v{{ cyberchef_versao }}/CyberChef_8cd426dd4f40f1423912d5fad91b578a86a65112.zip"
+cyberchef_sha256: f6478925d3eaa16ec08626a85f5b85eed10d531a5e18700615fed7ecb024cccf
+
+# pdfid e pdf-parser (Didier Stevens, dominio publico), fixados num commit
+didier_commit: 7d625d0b05c4638b981a2a2cc9a8481d7b73e56d
+didier_scripts: [pdfid.py, pdf-parser.py]
+
+pipx_ferramentas: [oletools, sigma-cli]

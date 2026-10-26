@@ -71,22 +71,28 @@
     - plymouth-trilho.png
   notify: atualizar initramfs
 
-- name: tema Plymouth atual
-  ansible.builtin.command: plymouth-set-default-theme
-  register: plymouth_atual
-  changed_when: false
-
+# no Ubuntu o tema de boot e escolhido por alternatives (nao ha plymouth-set-default-theme)
 - name: ativar tema Plymouth
-  ansible.builtin.command: plymouth-set-default-theme besafe
-  when: plymouth_atual.stdout != "besafe"
-  changed_when: true
+  community.general.alternatives:
+    name: default.plymouth
+    link: /usr/share/plymouth/themes/default.plymouth
+    path: /usr/share/plymouth/themes/besafe/besafe.plymouth
+    priority: 200
+    state: selected
   notify: atualizar initramfs
 
 # Login (LightDM)
+# o Xubuntu traz conf.d/30_xubuntu.conf, que sobrescreve o arquivo principal; 99 vence
+- name: diretorio de configuracao da tela de login
+  ansible.builtin.file:
+    path: /etc/lightdm/lightdm-gtk-greeter.conf.d
+    state: directory
+    mode: "0755"
+
 - name: tela de login
   ansible.builtin.template:
     src: lightdm-gtk-greeter.conf.j2
-    dest: /etc/lightdm/lightdm-gtk-greeter.conf
+    dest: /etc/lightdm/lightdm-gtk-greeter.conf.d/99_besafe.conf
     mode: "0644"
 
 # Desktop XFCE e GTK
@@ -100,6 +106,25 @@
   ansible.builtin.copy:
     src: gtk.css
     dest: /etc/skel/.config/gtk-3.0/gtk.css
+    mode: "0644"
+
+# o usuario do aluno ja existe (role base), entao o skel nao chega ate ele
+# .config criado antes, com dono certo; senao fica do root e o XFCE nao grava nada
+- name: diretorio GTK do aluno
+  ansible.builtin.file:
+    path: "/home/{{ besafe_usuario }}/{{ item }}"
+    state: directory
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    mode: "0755"
+  loop: [.config, .config/gtk-3.0]
+
+- name: acento rosa do GTK para o aluno
+  ansible.builtin.copy:
+    src: gtk.css
+    dest: "/home/{{ besafe_usuario }}/.config/gtk-3.0/gtk.css"
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
     mode: "0644"
 
 - name: esquema de cores do terminal

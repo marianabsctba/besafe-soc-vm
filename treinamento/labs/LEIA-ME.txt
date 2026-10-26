@@ -1,0 +1,10 @@
+Labs do Treinamento Be Safe
+
+Cada pasta corresponde a um modulo. As instrucoes de cada lab estao no
+treinamento (icone "Treinamento Be Safe" na area de trabalho).
+
+Logs reais de ataques a Windows usados nos modulos 3 e 7:
+  /opt/besafe/chainsaw/EVTX-ATTACK-SAMPLES
+  (projeto EVTX-ATTACK-SAMPLES, de Samir Bousseaden, licenca GPL-3.0)
+
+Powered By Mariana BS

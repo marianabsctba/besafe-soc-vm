@@ -1,0 +1,230 @@
+# Ferramentas de mercado do analista N1 (todas offline depois do build)
+
+# respondida antes de instalar o tshark: captura sem root para o grupo wireshark
+- name: permitir captura sem root
+  ansible.builtin.debconf:
+    name: wireshark-common
+    question: wireshark-common/install-setuid
+    value: "true"
+    vtype: boolean
+
+- name: pacotes das ferramentas
+  ansible.builtin.apt:
+    name:
+      - suricata
+      - tshark
+      - yara
+      - libimage-exiftool-perl
+      - binutils
+      - pipx
+      - unzip
+      - dnsutils
+      - whois
+      - xxd
+    state: present
+    update_cache: true
+
+- name: diretorio das ferramentas
+  ansible.builtin.file:
+    path: "{{ ferramentas_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Wireshark grafico
+  ansible.builtin.apt:
+    name: wireshark
+    state: present
+  when: besafe_desktop | bool
+
+- name: aluno no grupo wireshark
+  ansible.builtin.user:
+    name: "{{ besafe_usuario }}"
+    groups: [wireshark]
+    append: true
+
+# Hayabusa e Chainsaw: triagem de EVTX
+- name: baixar Hayabusa
+  ansible.builtin.get_url:
+    url: "{{ hayabusa_url }}"
+    dest: "/tmp/hayabusa.zip"
+    checksum: "sha256:{{ hayabusa_sha256 }}"
+    mode: "0644"
+
+- name: diretorio do Hayabusa
+  ansible.builtin.file:
+    path: "{{ ferramentas_dir }}/hayabusa"
+    state: directory
+    mode: "0755"
+
+- name: extrair Hayabusa
+  ansible.builtin.unarchive:
+    src: /tmp/hayabusa.zip
+    dest: "{{ ferramentas_dir }}/hayabusa"
+    remote_src: true
+    creates: "{{ ferramentas_dir }}/hayabusa/rules"
+
+- name: localizar binario do Hayabusa
+  ansible.builtin.find:
+    paths: "{{ ferramentas_dir }}/hayabusa"
+    patterns: "hayabusa-*-lin-x64-gnu"
+  register: hayabusa_bin
+
+# o zip do Hayabusa vem sem o bit de execucao
+- name: binario do Hayabusa executavel
+  ansible.builtin.file:
+    path: "{{ hayabusa_bin.files[0].path }}"
+    mode: "0755"
+
+- name: comando hayabusa
+  ansible.builtin.file:
+    src: "{{ hayabusa_bin.files[0].path }}"
+    dest: /usr/local/bin/hayabusa
+    state: link
+
+- name: baixar Chainsaw
+  ansible.builtin.get_url:
+    url: "{{ chainsaw_url }}"
+    dest: /tmp/chainsaw.zip
+    checksum: "sha256:{{ chainsaw_sha256 }}"
+    mode: "0644"
+
+- name: extrair Chainsaw
+  ansible.builtin.unarchive:
+    src: /tmp/chainsaw.zip
+    dest: "{{ ferramentas_dir }}"
+    remote_src: true
+    creates: "{{ ferramentas_dir }}/chainsaw"
+
+- name: binario Linux do Chainsaw executavel
+  ansible.builtin.file:
+    path: "{{ ferramentas_dir }}/chainsaw/chainsaw_x86_64-unknown-linux-gnu"
+    mode: "0755"
+
+- name: comando chainsaw
+  ansible.builtin.file:
+    src: "{{ ferramentas_dir }}/chainsaw/chainsaw_x86_64-unknown-linux-gnu"
+    dest: /usr/local/bin/chainsaw
+    state: link
+
+# CyberChef offline (abre no Firefox)
+- name: diretorio do CyberChef
+  ansible.builtin.file:
+    path: "{{ ferramentas_dir }}/cyberchef"
+    state: directory
+    mode: "0755"
+
+- name: baixar CyberChef
+  ansible.builtin.get_url:
+    url: "{{ cyberchef_url }}"
+    dest: /tmp/cyberchef.zip
+    checksum: "sha256:{{ cyberchef_sha256 }}"
+    mode: "0644"
+
+- name: extrair CyberChef
+  ansible.builtin.unarchive:
+    src: /tmp/cyberchef.zip
+    dest: "{{ ferramentas_dir }}/cyberchef"
+    remote_src: true
+    creates: "{{ ferramentas_dir }}/cyberchef/images"
+
+- name: localizar pagina do CyberChef
+  ansible.builtin.find:
+    paths: "{{ ferramentas_dir }}/cyberchef"
+    patterns: "CyberChef_v*.html"
+  register: cyberchef_html
+
+- name: atalho index.html do CyberChef
+  ansible.builtin.file:
+    src: "{{ cyberchef_html.files[0].path }}"
+    dest: "{{ ferramentas_dir }}/cyberchef/index.html"
+    state: link
+
+# pdfid e pdf-parser
+- name: diretorio dos scripts de PDF
+  ansible.builtin.file:
+    path: "{{ ferramentas_dir }}/didier"
+    state: directory
+    mode: "0755"
+
+- name: baixar pdfid e pdf-parser
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/DidierStevens/DidierStevensSuite/{{ didier_commit }}/{{ item }}"
+    dest: "{{ ferramentas_dir }}/didier/{{ item }}"
+    mode: "0755"
+  loop: "{{ didier_scripts }}"
+
+- name: comandos pdfid e pdf-parser
+  ansible.builtin.copy:
+    dest: "/usr/local/bin/{{ item | regex_replace('\\.py$', '') }}"
+    mode: "0755"
+    content: |
+      #!/bin/sh
+      exec python3 {{ ferramentas_dir }}/didier/{{ item }} "$@"
+  loop: "{{ didier_scripts }}"
+
+# oletools e sigma-cli via pipx, instalados para todos os usuarios
+- name: oletools e sigma-cli
+  community.general.pipx:
+    name: "{{ item }}"
+    state: present
+  environment:
+    PIPX_HOME: /opt/pipx
+    PIPX_BIN_DIR: /usr/local/bin
+  loop: "{{ pipx_ferramentas }}"
+
+# Suricata: IDS na interface da VM, alertas entram no Wazuh
+- name: wrapper do Suricata
+  ansible.builtin.copy:
+    src: besafe-suricata
+    dest: /usr/local/sbin/besafe-suricata
+    mode: "0755"
+
+- name: diretorio de override do Suricata
+  ansible.builtin.file:
+    path: /etc/systemd/system/suricata.service.d
+    state: directory
+    mode: "0755"
+
+- name: Suricata usa o wrapper
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/suricata.service.d/besafe.conf
+    mode: "0644"
+    content: |
+      [Service]
+      Type=simple
+      PIDFile=
+      ExecStart=
+      ExecStart=/usr/local/sbin/besafe-suricata
+  notify: reiniciar suricata
+
+- name: regras Emerging Threats Open
+  ansible.builtin.command: suricata-update --no-test
+  args:
+    creates: /var/lib/suricata/rules/suricata.rules
+  notify: reiniciar suricata
+
+- name: Suricata ativo no boot
+  ansible.builtin.systemd:
+    name: suricata
+    enabled: true
+    daemon_reload: true
+
+- name: Wazuh le os alertas do Suricata
+  ansible.builtin.blockinfile:
+    path: /var/ossec/etc/ossec.conf
+    marker: "<!-- {mark} BE SAFE SURICATA -->"
+    insertafter: EOF
+    block: |
+      <ossec_config>
+        <localfile>
+          <log_format>json</log_format>
+          <location>/var/log/suricata/eve.json</location>
+        </localfile>
+      </ossec_config>
+  notify: reiniciar wazuh manager
+
+- name: limpar downloads
+  ansible.builtin.file:
+    path: "/tmp/{{ item }}"
+    state: absent
+  loop: [hayabusa.zip, chainsaw.zip, cyberchef.zip]

@@ -26,6 +26,7 @@ ansible/
   roles/base         usuário do aluno, XFCE, guest tools, firewall
   roles/branding     identidade no boot, login, XFCE, terminal e Wazuh
   roles/wazuh        Wazuh all-in-one enxuto para lab
+  roles/ferramentas  Suricata, Wireshark, Hayabusa, Chainsaw, Sigma, YARA, CyberChef e afins
   roles/primeiro_boot senhas únicas por cópia da VM
 docs/                arquitetura e prévias
 ```
@@ -51,9 +52,24 @@ A OVA sai em `output-besafe-<versao>/`. O build leva de 30 a 60 minutos.
 
 ## Usar a VM
 
+- **VirtualBox:** Arquivo > Importar Appliance > `besafe-soc-lab-<versao>.ova`.
+- **VMware Workstation/Player:** Arquivo > Abrir > a mesma `.ova` (ou o `.vmx` da pasta VMware).
 - Requisito: host com 16 GB de RAM (a VM usa 12 GB) e 4 núcleos.
 - Login: usuário `analista`, senha `analista`.
 - A senha do Wazuh dashboard é única por cópia e fica em `~/.besafe/wazuh.txt`.
+
+## O que vem na VM
+
+| Ferramenta | Para quê |
+|---|---|
+| Wazuh 4.14 | SIEM: fila de alertas, busca e regras (`https://localhost`) |
+| Suricata + regras ET Open | IDS na interface da VM, alertas entram no Wazuh |
+| Wireshark / tshark | análise de tráfego e PCAP |
+| Hayabusa / Chainsaw | caça em logs EVTX do Windows (`hayabusa dfir-timeline`, `chainsaw hunt`) |
+| EVTX-ATTACK-SAMPLES | logs reais de ataques em `/opt/besafe/chainsaw/EVTX-ATTACK-SAMPLES` |
+| sigma-cli | ler e converter regras Sigma |
+| oletools, pdfid, pdf-parser, exiftool, YARA | anexos suspeitos sem executar |
+| CyberChef | decodificação offline (`/opt/besafe/cyberchef/index.html`) |
 
 ## Identidade visual
 

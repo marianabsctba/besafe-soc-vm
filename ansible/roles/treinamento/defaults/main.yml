@@ -1,0 +1,3 @@
+treinamento_dir: /usr/share/besafe/treinamento
+# enviado pelo Packer junto com as artes (veja packer/besafe.pkr.hcl)
+treinamento_src: /tmp/besafe-treinamento

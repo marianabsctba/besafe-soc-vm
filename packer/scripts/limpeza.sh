@@ -3,10 +3,29 @@
 set -euo pipefail
 
 # o usuario do build nao pode ser apagado enquanto o Packer esta conectado nele:
-# trava a senha agora e o servico de primeiro boot remove a conta
+# trava a senha agora e o servico de primeiro boot remove a conta e o sudoers dela.
+# O sudo sem senha fica ate la porque o Packer ainda usa para desligar a VM.
 passwd -l "$BUILD_USUARIO"
-rm -f /etc/sudoers.d/90-build
 echo "$BUILD_USUARIO" > /var/lib/besafe/usuario-build
+
+# rede generica: o instalador amarra a config ao nome da placa do VirtualBox (enp0s3),
+# mas no VMware ela vira ens33/ens160 e a VM ficaria sem rede
+rm -f /etc/netplan/*.yaml
+cat > /etc/netplan/01-besafe.yaml <<'NETPLAN'
+network:
+  version: 2
+  ethernets:
+    cabeadas:
+      match:
+        name: "e*"
+      dhcp4: true
+      optional: true
+NETPLAN
+chmod 600 /etc/netplan/01-besafe.yaml
+
+# cloud-init so servia para o autoinstall; em hardware novo ele rodaria de novo
+# e atrasaria o boot procurando metadados de nuvem
+touch /etc/cloud/cloud-init.disabled
 
 apt-get -y autoremove --purge
 apt-get clean

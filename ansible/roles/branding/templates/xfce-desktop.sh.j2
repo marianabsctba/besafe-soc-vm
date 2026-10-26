@@ -3,6 +3,12 @@
 MARCA="$HOME/.config/besafe-branding-{{ besafe_versao }}"
 [ -f "$MARCA" ] && exit 0
 
+# o xfdesktop cria as chaves do papel de parede alguns segundos depois do login
+for i in $(seq 1 30); do
+  xfconf-query -c xfce4-desktop -l 2>/dev/null | grep -q 'last-image$' && break
+  sleep 1
+done
+
 for m in $(xfconf-query -c xfce4-desktop -l | grep -E 'last-image$'); do
   xfconf-query -c xfce4-desktop -p "$m" -s "{{ branding_dir }}/wallpaper-1920x1080.png"
 done

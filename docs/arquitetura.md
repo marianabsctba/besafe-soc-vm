@@ -17,7 +17,11 @@ Decisões já tomadas e pontos em aberto. Este documento vem antes do código: o
 ## Componentes
 
 ### Ferramentas de mercado
-Wazuh, Suricata, Wireshark/tshark, Zeek (sob demanda), Hayabusa, Chainsaw, Sigma, oletools, pdfid, exiftool, YARA, CyberChef offline.
+Instaladas pela role `ferramentas`, com versões fixas e checksum: Suricata (ET Open, integrado ao Wazuh), Wireshark/tshark, Hayabusa 4.2, Chainsaw 2.17 (com EVTX-ATTACK-SAMPLES), sigma-cli, oletools, pdfid, pdf-parser, exiftool, YARA, CyberChef 11.5 offline.
+
+Zeek ficou de fora por enquanto: não há pacote no Ubuntu 24.04 e o repositório oficial é externo.
+
+O Firefox vem em `.deb` da Mozilla: o snap do Ubuntu não abre arquivos fora da home (o CyberChef fica em `/opt`) e tenta se atualizar sozinho.
 
 Fora de propósito: Security Onion (pesado), TheHive e MISP (pesados, licenciamento mudou), Velociraptor (fica para a trilha "Promoção a N2").
 
@@ -57,6 +61,7 @@ Toda cópia da OVA sai do mesmo build, então nada que seja segredo pode ser igu
 - **Chave da CA do Wazuh:** o pacote `wazuh-install-files.tar` é apagado no build, antes de exportar.
 - **Identidade da máquina:** `machine-id` e chaves SSH são zerados no build e recriados no primeiro boot; o SSH fica desativado.
 - **Rede:** firewall nega toda entrada e o dashboard escuta só em 127.0.0.1.
+- **Portabilidade:** rede configurada por padrão de nome (`e*`), não pelo nome da placa do VirtualBox; cloud-init desativado; firmware BIOS (o VMware ignora a marcação de EFI do VirtualBox na OVA); AVX desligado no VirtualBox para não travar quando o host tem Hyper-V.
 - **Limitação conhecida:** os certificados TLS internos do Wazuh são os mesmos em todas as cópias. Como só servem em localhost, o risco é baixo; regenerar no primeiro boot fica para uma versão futura.
 
 ## Em aberto

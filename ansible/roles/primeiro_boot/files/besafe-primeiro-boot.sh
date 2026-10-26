@@ -25,7 +25,7 @@ if [ -f "$ESTADO/usuario-build" ]; then
   if id "$u" >/dev/null 2>&1; then
     userdel -r "$u" || userdel "$u"
   fi
-  rm -f "$ESTADO/usuario-build"
+  rm -f "$ESTADO/usuario-build" /etc/sudoers.d/90-build
 fi
 
 # senhas do Wazuh: cada copia da VM ganha as suas

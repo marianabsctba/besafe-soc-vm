@@ -1,0 +1,5 @@
+#!/bin/sh
+# Suricata na interface da rota padrao: o nome muda entre VirtualBox (enp0s3) e VMware (ens33)
+IFACE=$(ip route show default | awk '{print $5; exit}')
+[ -n "$IFACE" ] || IFACE=$(ls /sys/class/net | grep -v '^lo$' | head -1)
+exec /usr/bin/suricata -c /etc/suricata/suricata.yaml --af-packet="$IFACE" --pidfile /run/suricata.pid

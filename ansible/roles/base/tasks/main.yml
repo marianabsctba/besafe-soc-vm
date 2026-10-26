@@ -25,6 +25,48 @@
     state: present
   when: besafe_desktop | bool
 
+# Firefox .deb da Mozilla: o snap do Ubuntu nao abre arquivos fora da home (CyberChef
+# fica em /opt) e tenta se atualizar sozinho numa VM que e offline
+- name: chave do repositorio da Mozilla
+  ansible.builtin.get_url:
+    url: https://packages.mozilla.org/apt/repo-signing-key.gpg
+    dest: /etc/apt/keyrings/packages.mozilla.org.asc
+    mode: "0644"
+  when: besafe_desktop | bool
+
+- name: repositorio da Mozilla
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/mozilla.list
+    mode: "0644"
+    content: "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main\n"
+  when: besafe_desktop | bool
+
+- name: preferir o Firefox da Mozilla ao pacote de transicao do snap
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/mozilla
+    mode: "0644"
+    content: |
+      Package: *
+      Pin: origin packages.mozilla.org
+      Pin-Priority: 1000
+  when: besafe_desktop | bool
+
+- name: remover Firefox snap
+  community.general.snap:
+    name: firefox
+    state: absent
+  failed_when: false
+  when: besafe_desktop | bool
+
+- name: Firefox .deb em portugues
+  ansible.builtin.apt:
+    name: [firefox, firefox-l10n-pt-br]
+    state: latest
+    update_cache: true
+    # o pacote de transicao do Ubuntu tem epoca "1:", maior que a versao da Mozilla
+    allow_downgrade: true
+  when: besafe_desktop | bool
+
 - name: iniciar em modo grafico
   ansible.builtin.command: systemctl set-default graphical.target
   register: alvo
