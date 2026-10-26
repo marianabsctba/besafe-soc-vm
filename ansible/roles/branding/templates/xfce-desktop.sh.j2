@@ -22,6 +22,12 @@ xfconf-query -c xsettings -p /Gtk/FontName -s "Rajdhani Medium 12" --create -t s
 xfconf-query -c xfwm4 -p /general/theme -s Default-hdpi --create -t string
 xfconf-query -c xfwm4 -p /general/title_font -s "Orbitron Bold 10" --create -t string
 
+# energia: sem apagar a tela e sem bloquear ao suspender
+for prop in dpms-enabled lock-screen-suspend-hibernate; do
+  xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/$prop -n -t bool -s false
+done
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/blank-on-ac -n -t int -s 0
+
 mkdir -p "$HOME/.config/xfce4/terminal"
 cat > "$HOME/.config/xfce4/terminal/terminalrc" <<'TERM'
 [Configuration]

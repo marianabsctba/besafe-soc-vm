@@ -1,0 +1,31 @@
+{
+  "policies": {
+    "SkipTermsOfUse": true,
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DontCheckDefaultBrowser": true,
+    "OverrideFirstRunPage": "",
+    "OverridePostUpdatePage": "",
+    "DisableAppUpdate": true,
+    "UserMessaging": {
+      "ExtensionRecommendations": false,
+      "FeatureRecommendations": false,
+      "UrlbarInterventions": false,
+      "SkipOnboarding": true,
+      "MoreFromMozilla": false,
+      "Locked": false
+    },
+    "Homepage": {
+      "URL": "file:///usr/share/besafe/treinamento/index.html",
+      "StartPage": "homepage"
+    },
+    "DisplayBookmarksToolbar": "always",
+    "ManagedBookmarks": [
+      { "toplevel_name": "Be Safe" },
+      { "name": "Treinamento", "url": "file:///usr/share/besafe/treinamento/index.html" },
+      { "name": "Console Be Safe", "url": "http://localhost:{{ console_porta | default(8080) }}" },
+      { "name": "Wazuh", "url": "https://localhost" },
+      { "name": "CyberChef", "url": "file:///opt/besafe/cyberchef/index.html" }
+    ]
+  }
+}

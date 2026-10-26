@@ -4,6 +4,7 @@ A IA nunca participa da nota. Cada criterio devolve pontos e um comentario, para
 aluno entender o que acertou e o que faltou.
 """
 SEVERIDADES = ["baixa", "media", "alta", "critica"]
+ROTULO_SEVERIDADE = {"baixa": "baixa", "media": "média", "alta": "alta", "critica": "crítica"}
 NOMES_CLASSIFICACAO = {
     "vp": "verdadeiro positivo (ataque)",
     "fp": "falso positivo",
@@ -50,11 +51,11 @@ def avaliar(ticket: dict, verdade: dict, dicas_usadas: int = 0) -> dict:
     except ValueError:
         diferenca = 9
     if diferenca == 0:
-        pts, msg = PESOS["severidade"], f"Severidade correta ({verdade['severidade']})."
+        pts, msg = PESOS["severidade"], f"Severidade correta ({ROTULO_SEVERIDADE[verdade['severidade']]})."
     elif diferenca == 1:
-        pts, msg = 8, f"Severidade próxima: o esperado era {verdade['severidade']}."
+        pts, msg = 8, f"Severidade próxima: o esperado era {ROTULO_SEVERIDADE[verdade['severidade']]}."
     else:
-        pts, msg = 0, f"Severidade distante: o esperado era {verdade['severidade']}."
+        pts, msg = 0, f"Severidade distante: o esperado era {ROTULO_SEVERIDADE[verdade['severidade']]}."
     itens.append(("severidade", pts, msg))
 
     # indicadores

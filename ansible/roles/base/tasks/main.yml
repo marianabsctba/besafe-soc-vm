@@ -69,6 +69,22 @@
     allow_downgrade: true
   when: besafe_desktop | bool
 
+# sem termos de uso, telemetria ou boas-vindas (VM offline e de treino), treinamento como
+# pagina inicial e favoritos para as ferramentas
+- name: diretorio de politicas do Firefox
+  ansible.builtin.file:
+    path: /etc/firefox/policies
+    state: directory
+    mode: "0755"
+  when: besafe_desktop | bool
+
+- name: politicas do Firefox
+  ansible.builtin.template:
+    src: firefox-policies.json.j2
+    dest: /etc/firefox/policies/policies.json
+    mode: "0644"
+  when: besafe_desktop | bool
+
 - name: iniciar em modo grafico
   ansible.builtin.command: systemctl set-default graphical.target
   register: alvo

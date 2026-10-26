@@ -37,6 +37,11 @@ SERVIDORES = [
 
 HORARIOS = ["08h às 17h", "09h às 18h", "07h às 16h", "13h às 22h"]
 
+GERENTES = {
+    "Financeiro": "Gerente financeiro", "RH": "Gerente de RH", "Operações": "Gerente de operações",
+    "Comercial": "Gerente comercial", "TI": "Gerente de TI", "Logística": "Gerente de logística",
+}
+
 
 @dataclass
 class Colaborador:
@@ -118,9 +123,9 @@ def gerar_mundo(semente: int) -> Mundo:
                 maquina=maquina, email=f"{login}@{mundo.dominio}"))
             mundo.maquinas.append(Maquina(
                 nome=maquina, ip=ip_unico(f"10.10.{rede_por_setor[setor]}"),
-                funcao=f"Estação de trabalho do {setor}", setor=setor, criticidade=crit, responsavel=login))
+                funcao=f"Estação de trabalho ({setor})", setor=setor, criticidade=crit, responsavel=login))
         gestor = pessoas[0]
-        gestor.cargo = f"Gerente de {setor}"
+        gestor.cargo = GERENTES[setor]
         gestor.ferias = False
         for p in pessoas[1:]:
             p.gestor = gestor.login

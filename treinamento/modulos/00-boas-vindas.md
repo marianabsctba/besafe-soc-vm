@@ -70,7 +70,7 @@ senha: Xk3.p9...
 ## 4. Primeiro login no Wazuh
 
 1. Abra o **Firefox** e acesse `https://localhost`.
-2. O Firefox vai mostrar **"Aviso: risco potencial de segurança"**. Clique em **Avançado** e depois em **Aceitar o risco e continuar**.
+2. O Firefox vai mostrar **"Tenha cautela. Algo não parece estar certo."** Clique em **Avançado** e depois em **Prosseguir para localhost (arriscado)**, no fim da página.
 3. Entre com o usuário `admin` e a senha do passo anterior.
 
 ### Por que apareceu o aviso de segurança?

@@ -3,6 +3,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const hora = (iso) => (iso ? new Date(iso).toLocaleTimeString("pt-BR") : "-");
 const NOMES = { vp: "Verdadeiro positivo", fp: "Falso positivo", vpb: "VP benigno" };
+const SEV = { baixa: "baixa", media: "média", alta: "alta", critica: "crítica" };
 
 async function api(caminho, opcoes = {}) {
   const r = await fetch(caminho, { headers: { "Content-Type": "application/json" }, ...opcoes });
@@ -12,13 +13,19 @@ async function api(caminho, opcoes = {}) {
 }
 
 // ---------------------------------------------------------------- abas
-$("#abas").addEventListener("click", (e) => {
-  const b = e.target.closest("button");
+function abrirAba(nome) {
+  const b = document.querySelector(`.abas button[data-aba="${nome}"]`);
   if (!b) return;
   document.querySelectorAll(".abas button").forEach((x) => x.classList.toggle("ativa", x === b));
-  document.querySelectorAll(".painel").forEach((p) => p.classList.toggle("ativo", p.id === b.dataset.aba));
-  carregar(b.dataset.aba);
+  document.querySelectorAll(".painel").forEach((p) => p.classList.toggle("ativo", p.id === nome));
+  if (location.hash !== "#" + nome) history.replaceState(null, "", "#" + nome);
+  carregar(nome);
+}
+$("#abas").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (b) abrirAba(b.dataset.aba);
 });
+window.addEventListener("hashchange", () => abrirAba(location.hash.slice(1)));
 
 function tabela(colunas, linhas) {
   return `<table><thead><tr>${colunas.map(([, t]) => `<th>${t}</th>`).join("")}</tr></thead><tbody>${
@@ -76,6 +83,8 @@ async function carregarPlantao() {
       carregarPlantao();
     };
   }
+  // sem plantao ativo, mostra o resultado do ultimo plantao encerrado
+  if (!p && e.historico.length && !$("#plantao-resultado").innerHTML.trim()) mostrarResultado(e.historico[0].resultado);
   $("#historico").innerHTML = e.historico.length
     ? tabela([["numero", "Plantão"], ["inicio", "Início", hora], ["resultado", "Nota", (r) => `${r.media ?? "-"}/100`],
               ["resultado", "Casos", (r) => `${r.com_ticket ?? 0} de ${r.casos ?? 0} com ticket`]], e.historico)
@@ -91,7 +100,7 @@ function mostrarResultado(r) {
       ${r.detalhes.map((d) => `
         <div class="item-ticket">
           <b>${esc(d.caso)}</b> · ${esc(d.titulo)}<br>
-          Gabarito: ${NOMES[d.verdade.classificacao]}, severidade ${d.verdade.severidade},
+          Gabarito: ${NOMES[d.verdade.classificacao]}, severidade ${SEV[d.verdade.severidade]},
           escalar: ${d.verdade.escalar ? "sim" : "não"}${d.verdade.iocs.length ? `, indicadores: ${esc(d.verdade.iocs.join(", "))}` : ""}<br>
           ${d.avaliacao ? `<b>${d.avaliacao.total}/100</b><ul>${d.avaliacao.itens.map((i) => `<li>${esc(i.comentario)} (${i.pontos})</li>`).join("")}</ul>` : "<b>0/100</b> · sem ticket"}
         </div>`).join("")}
@@ -118,7 +127,7 @@ $("#form-ticket").addEventListener("submit", async (ev) => {
 async function carregarTickets() {
   const t = await api("/api/tickets");
   $("#lista-tickets").innerHTML = t.length
-    ? t.map((x) => `<div class="item-ticket"><b>${esc(x.caso)}</b> · ${NOMES[x.classificacao]} · ${esc(x.severidade)} ·
+    ? t.map((x) => `<div class="item-ticket"><b>${esc(x.caso)}</b> · ${NOMES[x.classificacao]} · ${SEV[x.severidade]} ·
         escalar <span class="etiqueta ${x.escalar ? "sim" : "nao"}">${x.escalar ? "sim" : "não"}</span><br>
         <small>${esc(x.resumo).slice(0, 220)}</small></div>`).join("")
     : '<p class="ajuda">Nenhum ticket ainda. Registrar de novo o mesmo caso substitui o anterior.</p>';
@@ -189,4 +198,4 @@ function carregar(aba) {
 }
 setInterval(() => { $("#relogio").textContent = new Date().toLocaleTimeString("pt-BR"); }, 1000);
 setInterval(() => { if ($("#plantao").classList.contains("ativo")) carregarPlantao(); }, 15000);
-carregarPlantao();
+if (location.hash.length > 1) abrirAba(location.hash.slice(1)); else carregarPlantao();

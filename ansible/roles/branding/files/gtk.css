@@ -11,3 +11,8 @@ selection, *:selected { background-color: #fc13b4; color: #050407; }
 scale highlight, progressbar progress, switch:checked { background-color: #fc13b4; border-color: #fc13b4; }
 entry:focus, button:focus { outline-color: #fc13b4; }
 link, *:link { color: #ff6fd0; }
+
+/* rotulos dos icones da area de trabalho: o padrao sai escuro sobre o fundo preto */
+XfdesktopIconView.view { color: #f5e9f2; text-shadow: 1px 1px 2px #000000; }
+XfdesktopIconView.view.label { color: #f5e9f2; }
+XfdesktopIconView.view:selected { background-color: rgba(252, 19, 180, 0.45); }

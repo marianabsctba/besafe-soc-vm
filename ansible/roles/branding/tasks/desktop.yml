@@ -117,7 +117,7 @@
     owner: "{{ besafe_usuario }}"
     group: "{{ besafe_usuario }}"
     mode: "0755"
-  loop: [.config, .config/gtk-3.0]
+  loop: [.config, .config/gtk-3.0, .config/autostart]
 
 - name: acento rosa do GTK para o aluno
   ansible.builtin.copy:
@@ -132,6 +132,32 @@
     src: xfce/besafe.theme
     dest: /usr/share/xfce4/terminal/colorschemes/besafe.theme
     mode: "0644"
+
+# VM de laboratorio: sem descanso de tela nem bloqueio automatico (o aluno passa minutos lendo
+# o treinamento, e o bloqueio so atrapalha). O bloqueio manual (Ctrl+Alt+L) continua funcionando.
+- name: sem descanso de tela a cada sessao
+  ansible.builtin.copy:
+    dest: /etc/xdg/autostart/besafe-tela.desktop
+    mode: "0644"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Be Safe tela sempre ligada
+      Exec=sh -c "xset s off; xset -dpms; xset s noblank"
+      OnlyShowIn=XFCE;
+      NoDisplay=true
+
+- name: light-locker sem bloqueio automatico para o aluno
+  ansible.builtin.copy:
+    dest: "/home/{{ besafe_usuario }}/.config/autostart/light-locker.desktop"
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    mode: "0644"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Light Locker
+      Hidden=true
 
 - name: script de primeiro login do XFCE
   ansible.builtin.template:
