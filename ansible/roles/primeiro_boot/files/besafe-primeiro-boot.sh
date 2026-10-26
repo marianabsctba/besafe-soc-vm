@@ -78,11 +78,12 @@ CRED
 fi
 
 # Console: semente e plantoes sao desta copia. Qualquer resto do build e descartado.
+# O Console e ordenado depois deste servico (After=) e sobe sozinho quando ele termina.
+# Esperar por ele aqui (systemctl start sem --no-block) trava os dois ate o timeout.
 if [ -d "$ESTADO/console" ]; then
-  systemctl stop besafe-console 2>/dev/null || true
   rm -f "$ESTADO/console/semente" "$ESTADO/console/console.db"
   : > /var/log/besafe/eventos.json
-  systemctl start besafe-console || true
+  systemctl start --no-block besafe-console || true
 fi
 
 touch "$ESTADO/primeiro-boot.ok"
