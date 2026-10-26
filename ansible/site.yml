@@ -8,5 +8,7 @@
     - wazuh
     # depois do Wazuh: integra os alertas do Suricata no ossec.conf
     - ferramentas
+    # antes do treinamento: ele marca todos os icones da area de trabalho como confiaveis
+    - console
     - treinamento
     - primeiro_boot

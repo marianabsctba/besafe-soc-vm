@@ -1,0 +1,36 @@
+id: dns-tunel
+titulo: Rajada de consultas DNS com subdomínios aleatórios
+atores:
+  vitima: {colaborador: {setor: Logística}}
+  dominio: {dominio: "cdn-sync-{rand}.example"}
+linha_do_tempo:
+  - atraso: 0
+    fonte: sysmon
+    evento: 1
+    host: {nome: "{vitima.maquina}", ip: "{vitima.ip}"}
+    processo:
+      usuario: "PANTERA\\{vitima.login}"
+      pai: 'C:\Windows\explorer.exe'
+      imagem: 'C:\Users\{vitima.login}\AppData\Local\Temp\svch0st.exe'
+      linha_comando: '"C:\Users\{vitima.login}\AppData\Local\Temp\svch0st.exe" --sync'
+  - atraso: 20
+    repetir: 40
+    intervalo: 3
+    rotulo_tamanho: 32
+    fonte: sysmon
+    evento: 22
+    host: {nome: "{vitima.maquina}", ip: "{vitima.ip}"}
+    dns:
+      consulta: "{rotulo}.{dominio}"
+      tipo: TXT
+      processo: 'C:\Users\{vitima.login}\AppData\Local\Temp\svch0st.exe'
+verdade:
+  classificacao: vp
+  severidade: alta
+  escalar: true
+  iocs: ["{dominio}", "svch0st.exe"]
+  taticas: [Execution, Command and Control, Exfiltration]
+dicas:
+  - "Olhe os nomes consultados. Eles parecem nomes que uma pessoa digitaria?"
+  - "Que processo faz as consultas, e de que pasta ele roda? Compare o nome com o de um processo legítimo do Windows."
+  - "Um executável chamado svch0st.exe (com zero), rodando da pasta Temp, faz dezenas de consultas TXT com subdomínios aleatórios para o mesmo domínio: canal de comando ou vazamento por DNS. Escale."

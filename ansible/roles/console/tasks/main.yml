@@ -1,0 +1,190 @@
+# Console Be Safe (plantao, tickets, nota), motor de cenarios no Wazuh e IA local
+
+- name: pacotes do Console
+  ansible.builtin.apt:
+    name: [python3-venv, python3-pip]
+    state: present
+
+- name: usuario de sistema do Console
+  ansible.builtin.user:
+    name: besafe
+    system: true
+    shell: /usr/sbin/nologin
+    home: "{{ console_estado }}"
+    create_home: false
+
+- name: diretorios do Console
+  ansible.builtin.file:
+    path: "{{ item.caminho }}"
+    state: directory
+    owner: "{{ item.dono }}"
+    group: "{{ item.dono }}"
+    mode: "{{ item.modo }}"
+  loop:
+    - { caminho: "{{ console_dir }}", dono: root, modo: "0755" }
+    - { caminho: "{{ console_estado }}", dono: besafe, modo: "0700" }
+    - { caminho: "{{ console_eventos | dirname }}", dono: besafe, modo: "0755" }
+
+- name: codigo do Console
+  ansible.builtin.copy:
+    src: "{{ console_src }}/besafe"
+    dest: "{{ console_dir }}/"
+    mode: u=rwX,g=rX,o=rX
+
+- name: ambiente Python do Console
+  ansible.builtin.pip:
+    name: "{{ console_pip }}"
+    virtualenv: "{{ console_dir }}/venv"
+    virtualenv_command: python3 -m venv
+
+- name: arquivo de eventos lido pelo Wazuh
+  ansible.builtin.file:
+    path: "{{ console_eventos }}"
+    state: touch
+    owner: besafe
+    group: besafe
+    mode: "0644"
+    modification_time: preserve
+    access_time: preserve
+
+# ---------------------------------------------------------------- Wazuh
+- name: regras do Be Safe no Wazuh
+  ansible.builtin.copy:
+    src: "{{ console_src }}/wazuh/besafe_rules.xml"
+    dest: /var/ossec/etc/rules/besafe_rules.xml
+    owner: wazuh
+    group: wazuh
+    mode: "0660"
+  notify: reiniciar wazuh manager
+
+- name: Wazuh le os eventos do motor de cenarios
+  ansible.builtin.blockinfile:
+    path: /var/ossec/etc/ossec.conf
+    marker: "<!-- {mark} BE SAFE MOTOR -->"
+    insertafter: EOF
+    block: |
+      <ossec_config>
+        <localfile>
+          <log_format>json</log_format>
+          <location>{{ console_eventos }}</location>
+        </localfile>
+      </ossec_config>
+  notify: reiniciar wazuh manager
+
+- name: identidade Be Safe no Wazuh dashboard (logos servidos pelo Console)
+  ansible.builtin.blockinfile:
+    path: /etc/wazuh-dashboard/opensearch_dashboards.yml
+    marker: "# {mark} BE SAFE BRANDING"
+    block: "{{ lookup('ansible.builtin.template', 'opensearch_dashboards-branding.yml.j2') }}"
+  vars:
+    wazuh_branding_url: "http://localhost:{{ console_porta }}/branding"
+  notify: reiniciar wazuh dashboard
+
+# ---------------------------------------------------------------- IA local
+- name: diretorio da IA
+  ansible.builtin.file:
+    path: "{{ ia_dir }}"
+    state: directory
+    mode: "0755"
+  when: ia_instalar | bool
+
+- name: baixar llama.cpp
+  ansible.builtin.get_url:
+    url: "{{ llama_url }}"
+    dest: /tmp/llama.tar.gz
+    checksum: "sha256:{{ llama_sha256 }}"
+    mode: "0644"
+  when: ia_instalar | bool
+
+- name: extrair llama.cpp
+  ansible.builtin.unarchive:
+    src: /tmp/llama.tar.gz
+    dest: "{{ ia_dir }}"
+    remote_src: true
+    extra_opts: [--strip-components=1]
+    creates: "{{ ia_dir }}/llama-server"
+  when: ia_instalar | bool
+
+- name: baixar o modelo (cerca de 2,4 GB)
+  ansible.builtin.get_url:
+    url: "{{ ia_modelo_url }}"
+    dest: "{{ ia_dir }}/modelo.gguf"
+    checksum: "sha256:{{ ia_modelo_sha256 }}"
+    mode: "0644"
+    timeout: 1800
+  when: ia_instalar | bool
+
+- name: licenca do modelo
+  ansible.builtin.copy:
+    dest: "{{ ia_dir }}/LEIA-ME.txt"
+    mode: "0644"
+    content: |
+      IA local do Be Safe SOC Lab
+      Servidor: llama.cpp {{ llama_versao }} (licenca MIT)
+      Modelo: {{ ia_modelo_licenca }}
+      Origem do modelo: {{ ia_modelo_url }}
+  when: ia_instalar | bool
+
+- name: limpar download do llama.cpp
+  ansible.builtin.file:
+    path: /tmp/llama.tar.gz
+    state: absent
+
+# ---------------------------------------------------------------- servico
+- name: servico do Console
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/besafe-console.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Console Be Safe (plantao, tickets e motor de cenarios)
+      After=network.target wazuh-manager.service besafe-primeiro-boot.service
+
+      [Service]
+      User=besafe
+      Group=besafe
+      Environment=BESAFE_ESTADO={{ console_estado }}
+      Environment=BESAFE_EVENTOS={{ console_eventos }}
+      Environment=BESAFE_IA_DIR={{ ia_dir }}
+      Environment=LD_LIBRARY_PATH={{ ia_dir }}
+      ExecStart={{ console_dir }}/venv/bin/uvicorn besafe.app:app --app-dir {{ console_dir }} --host 127.0.0.1 --port {{ console_porta }}
+      Restart=on-failure
+      NoNewPrivileges=true
+      ProtectSystem=strict
+      ReadWritePaths={{ console_estado }} {{ console_eventos | dirname }}
+      PrivateTmp=true
+
+      [Install]
+      WantedBy=multi-user.target
+
+# ativado, mas nao iniciado no build: a semente tem que nascer no primeiro boot de cada copia
+- name: ativar o Console no boot
+  ansible.builtin.systemd:
+    name: besafe-console
+    enabled: true
+    daemon_reload: true
+
+- name: area de trabalho do aluno
+  ansible.builtin.file:
+    path: "/home/{{ besafe_usuario }}/Desktop"
+    state: directory
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    mode: "0755"
+  when: besafe_desktop | bool
+
+- name: icone do Console na area de trabalho
+  ansible.builtin.copy:
+    dest: "/home/{{ besafe_usuario }}/Desktop/console-besafe.desktop"
+    owner: "{{ besafe_usuario }}"
+    group: "{{ besafe_usuario }}"
+    mode: "0755"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=Console Be Safe
+      Comment=Plantao, tickets e nota
+      Exec=firefox http://localhost:{{ console_porta }}
+      Icon={{ branding_dir }}/icone-128.png
+      Terminal=false
+  when: besafe_desktop | bool

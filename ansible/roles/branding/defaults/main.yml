@@ -1,8 +1,2 @@
 branding_dir: /usr/share/besafe/branding
 branding_src: "{{ playbook_dir }}/../branding"
-console_porta: 8080
-# as artes sao servidas pelo console local para o Wazuh dashboard carregar
-wazuh_branding_url: "http://localhost:{{ console_porta }}/branding"
-wazuh_dashboard_conf: /etc/wazuh-dashboard/opensearch_dashboards.yml
-# desligado ate o console Be Safe servir as artes em console_porta
-aplicar_branding_wazuh: false

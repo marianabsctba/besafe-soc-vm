@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Console Be Safe</title>
+<link rel="icon" href="/branding/icone-32.png">
+<link rel="stylesheet" href="/static/console.css">
+</head>
+<body>
+<header class="topo">
+  <img src="/branding/icone-128.png" alt="">
+  <span class="marca">BE SAFE <b>CONSOLE</b></span>
+  <span id="relogio" class="relogio"></span>
+</header>
+
+<nav class="abas" id="abas">
+  <button data-aba="plantao" class="ativa">Plantão</button>
+  <button data-aba="tickets">Tickets</button>
+  <button data-aba="diretorio">Diretório</button>
+  <button data-aba="inventario">Inventário</button>
+  <button data-aba="mudancas">Mudanças</button>
+  <button data-aba="phishing">Phishing reportado</button>
+  <button data-aba="intel">Intel</button>
+  <button data-aba="assistentes">Assistentes</button>
+</nav>
+
+<main>
+  <!-- PLANTAO -->
+  <section id="plantao" class="painel ativo">
+    <div id="plantao-estado"></div>
+    <div id="plantao-resultado"></div>
+    <h3>Histórico</h3>
+    <div id="historico"></div>
+  </section>
+
+  <!-- TICKETS -->
+  <section id="tickets" class="painel">
+    <div class="duas-colunas">
+      <form id="form-ticket" class="cartao">
+        <h3>Novo ticket</h3>
+        <label>ID do caso <small>(aparece como [PL-1234] na descrição do alerta e no campo <code>data.besafe.caso</code>)</small>
+          <input name="caso" required placeholder="PL-0000" autocomplete="off"></label>
+        <label>Classificação
+          <select name="classificacao" required>
+            <option value="">escolha...</option>
+            <option value="vp">Verdadeiro positivo (ataque)</option>
+            <option value="fp">Falso positivo</option>
+            <option value="vpb">Verdadeiro positivo benigno (autorizado)</option>
+          </select></label>
+        <label>Severidade
+          <select name="severidade" required>
+            <option value="">escolha...</option>
+            <option value="baixa">Baixa</option><option value="media">Média</option>
+            <option value="alta">Alta</option><option value="critica">Crítica</option>
+          </select></label>
+        <label class="linha"><input type="checkbox" name="escalar"> Escalar para o N2</label>
+        <label>Indicadores (um por linha, pode usar defang)
+          <textarea name="iocs" rows="3" placeholder="203.0.113[.]10&#10;dominio-ruim[.]example"></textarea></label>
+        <label>Resumo (o que, onde, quando, sua avaliação)
+          <textarea name="resumo" rows="6"></textarea></label>
+        <button type="submit">Registrar ticket</button>
+        <p id="ticket-msg" class="msg"></p>
+      </form>
+      <div>
+        <h3>Tickets deste plantão</h3>
+        <div id="lista-tickets"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="diretorio" class="painel">
+    <input class="filtro" data-alvo="tabela-diretorio" placeholder="filtrar por nome, login, setor...">
+    <div id="tabela-diretorio"></div>
+  </section>
+
+  <section id="inventario" class="painel">
+    <input class="filtro" data-alvo="tabela-inventario" placeholder="filtrar por nome, IP, função...">
+    <div id="tabela-inventario"></div>
+  </section>
+
+  <section id="mudancas" class="painel">
+    <p class="ajuda">Mudanças aprovadas para o período. Atividade "estranha" que bate com uma mudança aprovada costuma ser benigna, mas confira se origem, alvo e horário batem.</p>
+    <div id="lista-mudancas"></div>
+  </section>
+
+  <section id="phishing" class="painel">
+    <p class="ajuda">E-mails que colaboradores reportaram pelo botão "reportar phishing".</p>
+    <div id="lista-phishing"></div>
+  </section>
+
+  <section id="intel" class="painel">
+    <form id="form-intel" class="cartao estreito">
+      <h3>Consultar reputação</h3>
+      <input name="valor" placeholder="IP, domínio ou hash" required>
+      <button type="submit">Consultar</button>
+    </form>
+    <div id="resultado-intel"></div>
+  </section>
+
+  <section id="assistentes" class="painel">
+    <p class="ajuda" id="aviso-ia"></p>
+    <div class="tres-colunas">
+      <div class="cartao">
+        <h3>Mentor N2</h3>
+        <p class="ajuda">Orientação sem entregar a resposta. Cada dica nova custa 5 pontos no caso.</p>
+        <input id="mentor-caso" placeholder="PL-0000">
+        <textarea id="mentor-texto" rows="3" placeholder="Sua pergunta (opcional)"></textarea>
+        <div class="botoes"><button id="mentor-perguntar">Perguntar</button><button id="mentor-dica" class="secundario">Nova dica (-5)</button></div>
+        <div id="mentor-saida" class="saida"></div>
+      </div>
+      <div class="cartao">
+        <h3>Entrevistar envolvido</h3>
+        <p class="ajuda">Converse com a pessoa envolvida no caso (quando houver).</p>
+        <input id="pessoa-caso" placeholder="PL-0000">
+        <textarea id="pessoa-texto" rows="3" placeholder="O que você quer perguntar?"></textarea>
+        <button id="pessoa-perguntar">Perguntar</button>
+        <div id="pessoa-saida" class="saida"></div>
+      </div>
+      <div class="cartao">
+        <h3>Copiloto do SOC</h3>
+        <p class="ajuda">Resumo automático dos eventos de um caso. Útil, mas não confie de olhos fechados.</p>
+        <input id="copiloto-caso" placeholder="PL-0000">
+        <button id="copiloto-resumir">Resumir caso</button>
+        <div id="copiloto-saida" class="saida"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>Powered By Mariana BS</footer>
+<script src="/static/console.js"></script>
+</body>
+</html>

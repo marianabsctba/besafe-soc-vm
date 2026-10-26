@@ -1,0 +1,24 @@
+id: defender-lsass
+titulo: Antivírus acessando o LSASS
+atores:
+  pessoa: {colaborador: {}}
+linha_do_tempo:
+  - atraso: 0
+    fonte: sysmon
+    evento: 10
+    host: {nome: "{pessoa.maquina}", ip: "{pessoa.ip}"}
+    acesso:
+      origem: 'C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.24090.11-0\MsMpEng.exe'
+      destino: 'C:\Windows\system32\lsass.exe'
+      permissoes: "0x1000"
+      usuario: "NT AUTHORITY\\SYSTEM"
+verdade:
+  classificacao: fp
+  severidade: baixa
+  escalar: false
+  iocs: []
+  taticas: []
+dicas:
+  - "Quem acessou o LSASS? Leia o caminho completo do executável."
+  - "Esse programa costuma acessar o LSASS? Ele está na pasta onde deveria estar? Com que permissão acessou?"
+  - "É o Microsoft Defender, na pasta oficial dele, rodando como SYSTEM, com permissão de leitura limitada: rotina do antivírus. Falso positivo."

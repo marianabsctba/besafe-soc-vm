@@ -1,0 +1,29 @@
+id: forca-bruta-rdp
+titulo: Tentativas de RDP vindas da internet contra servidor exposto
+atores:
+  alvo: {servidor: SRV-WEB01}
+  atacante: {ip_externo: true}
+linha_do_tempo:
+  - atraso: 0
+    repetir: 30
+    intervalo: 4
+    escolher:
+      usuario_tentado: [administrator, admin, administrador, suporte, teste, backup, scanner, user]
+    fonte: windows
+    evento: 4625
+    host: {nome: "{alvo.nome}", ip: "{alvo.ip}"}
+    logon:
+      usuario: "{usuario_tentado}"
+      tipo: 10
+      ip_origem: "{atacante}"
+      motivo: "usuário ou senha incorretos"
+verdade:
+  classificacao: vp
+  severidade: alta
+  escalar: true
+  iocs: ["{atacante}"]
+  taticas: [Credential Access]
+dicas:
+  - "Que tipo de logon é esse e de onde ele vem?"
+  - "Quantas tentativas, em quanto tempo, e com quais nomes de usuário? Algum deu certo?"
+  - "Dezenas de logons tipo 10 (RDP) vindos de um IP da internet contra o servidor do site, testando nomes comuns: força bruta. Não houve sucesso, mas o RDP não deveria estar exposto. Escale com o IP e a recomendação de bloquear."

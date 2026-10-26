@@ -1,0 +1,54 @@
+:root {
+  --preto: #050407; --superficie: #120a12; --superficie2: #1c101b; --borda: #2c1428;
+  --rosa: #fc13b4; --rosa-claro: #ff6fd0; --texto: #f5e9f2; --mudo: #a8939f;
+  --verde: #5ee3a1; --amarelo: #ffd166; --vermelho: #ff4d6d;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--preto); color: var(--texto); font: 16px/1.5 "Rajdhani", "Segoe UI", system-ui, sans-serif; }
+.topo { display: flex; align-items: center; gap: 12px; padding: 10px 24px; border-bottom: 1px solid #3a1630; }
+.topo img { width: 36px; height: 36px; }
+.marca { font: 700 18px "Orbitron", sans-serif; letter-spacing: 2px; }
+.marca b { color: var(--rosa); }
+.relogio { margin-left: auto; color: var(--mudo); font-variant-numeric: tabular-nums; }
+.abas { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px 24px 0; border-bottom: 1px solid var(--borda); }
+.abas button { background: none; border: 0; border-bottom: 3px solid transparent; color: var(--mudo); padding: 8px 14px; font: 600 15px inherit; cursor: pointer; }
+.abas button.ativa, .abas button:hover { color: var(--texto); border-bottom-color: var(--rosa); }
+main { padding: 20px 24px 60px; max-width: 1400px; }
+.painel { display: none; }
+.painel.ativo { display: block; }
+h2, h3 { font-family: "Orbitron", sans-serif; }
+h3 { color: var(--rosa-claro); font-size: 16px; margin: 18px 0 10px; }
+.cartao { background: var(--superficie); border: 1px solid var(--borda); border-radius: 10px; padding: 16px; }
+.estreito { max-width: 520px; }
+.duas-colunas { display: grid; grid-template-columns: minmax(320px, 460px) 1fr; gap: 20px; }
+.tres-colunas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 1000px) { .duas-colunas, .tres-colunas { grid-template-columns: 1fr; } }
+label { display: block; margin: 10px 0; color: var(--mudo); font-weight: 600; }
+label small { font-weight: 400; }
+label.linha { display: flex; gap: 8px; align-items: center; color: var(--texto); }
+input, select, textarea { width: 100%; margin-top: 4px; background: var(--preto); color: var(--texto); border: 1px solid var(--borda); border-radius: 6px; padding: 8px 10px; font: 15px inherit; }
+input[type=checkbox] { width: auto; margin: 0; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--rosa); border-color: transparent; }
+button { background: var(--rosa); color: var(--preto); border: 0; border-radius: 6px; padding: 9px 16px; font: 700 15px inherit; cursor: pointer; margin-top: 8px; }
+button:hover { background: var(--rosa-claro); }
+button.secundario { background: var(--superficie2); color: var(--rosa-claro); border: 1px solid var(--rosa); }
+button:disabled { opacity: .5; cursor: wait; }
+.botoes { display: flex; gap: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--borda); vertical-align: top; }
+th { color: var(--rosa-claro); background: var(--superficie2); position: sticky; top: 0; }
+.filtro { max-width: 420px; margin-bottom: 12px; }
+.ajuda { color: var(--mudo); }
+.msg { min-height: 1.4em; }
+.msg.ok { color: var(--verde); } .msg.erro { color: var(--vermelho); }
+.saida { margin-top: 12px; white-space: pre-wrap; background: var(--preto); border-radius: 6px; padding: 10px; min-height: 2em; }
+.etiqueta { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 13px; font-weight: 700; }
+.etiqueta.sim { background: #3a1222; color: var(--vermelho); } .etiqueta.nao { background: #10261b; color: var(--verde); }
+.grande { font: 700 44px "Orbitron", sans-serif; color: var(--rosa); }
+.barra { height: 8px; background: var(--superficie2); border-radius: 4px; overflow: hidden; margin: 8px 0 14px; }
+.barra div { height: 100%; background: var(--rosa); }
+.item-ticket { border-left: 3px solid var(--rosa); padding: 6px 12px; margin-bottom: 10px; background: var(--superficie); }
+.veredito-malicioso { color: var(--vermelho); } .veredito-suspeito { color: var(--amarelo); }
+.veredito-desconhecido, .veredito-interno, .veredito-sem { color: var(--mudo); }
+footer { text-align: right; padding: 12px 24px; color: var(--rosa-claro); font-weight: 700; }
+code { background: var(--superficie2); padding: 1px 5px; border-radius: 4px; }

@@ -1,0 +1,27 @@
+id: senha-errada
+titulo: Falhas de logon seguidas de sucesso na própria estação
+atores:
+  pessoa: {colaborador: {ferias: false}}
+linha_do_tempo:
+  - atraso: 0
+    repetir: 3
+    intervalo: 7
+    fonte: windows
+    evento: 4625
+    host: {nome: "{pessoa.maquina}", ip: "{pessoa.ip}"}
+    logon: {usuario: "{pessoa.login}", tipo: 2, ip_origem: "127.0.0.1", motivo: "senha incorreta"}
+  - atraso: 30
+    fonte: windows
+    evento: 4624
+    host: {nome: "{pessoa.maquina}", ip: "{pessoa.ip}"}
+    logon: {usuario: "{pessoa.login}", tipo: 2, ip_origem: "127.0.0.1"}
+verdade:
+  classificacao: fp
+  severidade: baixa
+  escalar: false
+  iocs: []
+  taticas: []
+dicas:
+  - "De onde vieram as tentativas: da própria máquina ou da rede?"
+  - "Quantas falhas foram, em quanto tempo, e o que aconteceu logo depois?"
+  - "Três erros no teclado da própria estação, seguidos de sucesso, por alguém que trabalha nesse horário: é a pessoa errando a senha ao chegar."

@@ -99,12 +99,3 @@
     content: |
       Be Safe SOC Lab {{ besafe_versao }}  \l
       Powered By Mariana BS
-
-# Wazuh dashboard
-- name: identidade no Wazuh dashboard
-  ansible.builtin.blockinfile:
-    path: "{{ wazuh_dashboard_conf }}"
-    marker: "# {mark} BE SAFE BRANDING"
-    block: "{{ lookup('ansible.builtin.template', 'opensearch_dashboards-branding.yml.j2') }}"
-  when: aplicar_branding_wazuh | bool
-  notify: reiniciar wazuh dashboard

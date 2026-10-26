@@ -174,7 +174,7 @@ build {
     execute_command = "echo '${var.build_senha}' | {{ .Vars }} sudo -S -E bash '{{ .Path }}'"
     inline = [
       # destino das artes precisa existir e ser do usuario do build (o upload e por scp)
-      "install -d -o ${var.build_usuario} -g ${var.build_usuario} /tmp/besafe-branding /tmp/besafe-treinamento",
+      "install -d -o ${var.build_usuario} -g ${var.build_usuario} /tmp/besafe-branding /tmp/besafe-treinamento /tmp/besafe-console",
       "apt-get update",
       # o pacote "ansible" ja traz community.general e ansible.posix; ansible-galaxy aqui
       # rodaria como root e deixaria ~/.ansible do usuario do build sem permissao
@@ -193,6 +193,12 @@ build {
   provisioner "file" {
     source      = "${path.root}/../treinamento/"
     destination = "/tmp/besafe-treinamento"
+    direction   = "upload"
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/../console/"
+    destination = "/tmp/besafe-console"
     direction   = "upload"
   }
 

@@ -1,0 +1,184 @@
+<!--
+  Regras do Be Safe SOC Lab para os eventos do motor de cenarios
+  (arquivo /var/log/besafe/eventos.json, formato JSON).
+  Faixa de IDs: 100100 a 100199. O ID do caso aparece na descricao: [PL-1234].
+-->
+<group name="besafe,">
+
+  <rule id="100100" level="0">
+    <decoded_as>json</decoded_as>
+    <field name="besafe.caso" type="pcre2">^PL-\d+$</field>
+    <description>Be Safe: evento do plantao</description>
+  </rule>
+
+  <!-- E-mail -->
+  <rule id="100101" level="6">
+    <if_sid>100100</if_sid>
+    <field name="besafe.fonte" type="pcre2">^email$</field>
+    <field name="email.anexo" type="pcre2">(?i)\.(xlsm|docm|xls|doc|js|vbs|hta|iso|zip)$</field>
+    <description>[$(besafe.caso)] E-mail externo com anexo que pode conter macro ou script: $(email.anexo)</description>
+    <mitre><id>T1566.001</id></mitre>
+    <group>besafe_email,</group>
+  </rule>
+
+  <!-- Sysmon 1: processo criado -->
+  <rule id="100110" level="3">
+    <if_sid>100100</if_sid>
+    <field name="besafe.fonte" type="pcre2">^sysmon$</field>
+    <field name="besafe.evento" type="pcre2">^1$</field>
+    <description>[$(besafe.caso)] Processo criado em $(host.nome): $(processo.imagem)</description>
+    <group>besafe_processo,</group>
+  </rule>
+
+  <rule id="100111" level="12">
+    <if_sid>100110</if_sid>
+    <field name="processo.pai" type="pcre2">(?i)\\(excel|winword|powerpnt|outlook)\.exe$</field>
+    <field name="processo.imagem" type="pcre2">(?i)\\(powershell|cmd|wscript|cscript|mshta)\.exe$</field>
+    <description>[$(besafe.caso)] Aplicativo do Office iniciou interpretador de comandos em $(host.nome)</description>
+    <mitre><id>T1204.002</id><id>T1059.001</id></mitre>
+    <group>besafe_processo,</group>
+  </rule>
+
+  <rule id="100112" level="12">
+    <if_sid>100110</if_sid>
+    <field name="processo.imagem" type="pcre2">(?i)\\certutil\.exe$</field>
+    <field name="processo.linha_comando" type="pcre2">(?i)urlcache|https?://</field>
+    <description>[$(besafe.caso)] certutil usado para baixar arquivo em $(host.nome)</description>
+    <mitre><id>T1105</id></mitre>
+    <group>besafe_processo,</group>
+  </rule>
+
+  <rule id="100113" level="9">
+    <if_sid>100110</if_sid>
+    <field name="processo.imagem" type="pcre2">(?i)\\(AppData\\Local\\Temp|Users\\Public)\\[^\\]+\.exe$</field>
+    <description>[$(besafe.caso)] Executável rodando de pasta temporária ou pública em $(host.nome): $(processo.imagem)</description>
+    <mitre><id>T1036.005</id></mitre>
+    <group>besafe_processo,</group>
+  </rule>
+
+  <!-- Sysmon 3: conexao de rede -->
+  <rule id="100120" level="3">
+    <if_sid>100100</if_sid>
+    <field name="besafe.fonte" type="pcre2">^sysmon$</field>
+    <field name="besafe.evento" type="pcre2">^3$</field>
+    <description>[$(besafe.caso)] Conexão de rede de $(processo.imagem) para $(rede.ip_destino)</description>
+    <group>besafe_rede,</group>
+  </rule>
+
+  <rule id="100121" level="10">
+    <if_sid>100120</if_sid>
+    <field name="processo.imagem" type="pcre2">(?i)\\(powershell|certutil|rundll32|regsvr32|mshta)\.exe$</field>
+    <field name="rede.ip_destino" type="pcre2">^(?!10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.)</field>
+    <description>[$(besafe.caso)] $(processo.imagem) conectou em IP externo $(rede.ip_destino) ($(rede.dominio))</description>
+    <mitre><id>T1071.001</id></mitre>
+    <group>besafe_rede,</group>
+  </rule>
+
+  <!-- Sysmon 10: acesso a processo -->
+  <rule id="100130" level="8">
+    <if_sid>100100</if_sid>
+    <field name="besafe.fonte" type="pcre2">^sysmon$</field>
+    <field name="besafe.evento" type="pcre2">^10$</field>
+    <field name="acesso.destino" type="pcre2">(?i)\\lsass\.exe$</field>
+    <description>[$(besafe.caso)] Acesso à memória do LSASS em $(host.nome) por $(acesso.origem)</description>
+    <mitre><id>T1003.001</id></mitre>
+    <group>besafe_credenciais,</group>
+  </rule>
+
+  <!-- Sysmon 22: DNS -->
+  <rule id="100160" level="2">
+    <if_sid>100100</if_sid>
+    <field name="besafe.fonte" type="pcre2">^sysmon$</field>
+    <field name="besafe.evento" type="pcre2">^22$</field>
+    <description>[$(besafe.caso)] Consulta DNS de $(host.nome): $(dns.consulta)</description>
+    <group>besafe_dns,</group>
+  </rule>
+
+  <rule id="100162" level="4">
+    <if_sid>100160</if_sid>
+    <field name="dns.consulta" type="pcre2">^[a-z0-9]{25,}\.</field>
+    <description>[$(besafe.caso)] Consulta DNS com subdomínio longo de $(host.nome): $(dns.consulta)</description>
+    <group>besafe_dns,</group>
+  </rule>
+
+  <rule id="100161" level="10" frequency="15" timeframe="180">
+    <if_matched_sid>100162</if_matched_sid>
+    <same_field>host.nome</same_field>
+    <description>[$(besafe.caso)] Rajada de consultas DNS com subdomínios aleatórios a partir de $(host.nome)</description>
+    <mitre><id>T1071.004</id><id>T1048</id></mitre>
+    <group>besafe_dns,</group>
+  </rule>
+
+  <!-- Windows: logon -->
+  <rule id="100140" level="5">
+    <if_sid>100100</if_sid>
+    <field name="besafe.fonte" type="pcre2">^windows$</field>
+    <field name="besafe.evento" type="pcre2">^4625$</field>
+    <description>[$(besafe.caso)] Falha de logon (tipo $(logon.tipo)) de $(logon.usuario) em $(host.nome), origem $(logon.ip_origem)</description>
+    <mitre><id>T1110</id></mitre>
+    <group>besafe_logon,authentication_failed,</group>
+  </rule>
+
+  <rule id="100141" level="10" frequency="10" timeframe="180">
+    <if_matched_sid>100140</if_matched_sid>
+    <same_field>logon.ip_origem</same_field>
+    <description>[$(besafe.caso)] Múltiplas falhas de logon da mesma origem $(logon.ip_origem) contra $(host.nome)</description>
+    <mitre><id>T1110</id></mitre>
+    <group>besafe_logon,authentication_failures,</group>
+  </rule>
+
+  <rule id="100142" level="3">
+    <if_sid>100100</if_sid>
+    <field name="besafe.fonte" type="pcre2">^windows$</field>
+    <field name="besafe.evento" type="pcre2">^4624$</field>
+    <description>[$(besafe.caso)] Logon (tipo $(logon.tipo)) de $(logon.usuario) em $(host.nome)</description>
+    <group>besafe_logon,authentication_success,</group>
+  </rule>
+
+  <rule id="100143" level="6">
+    <if_sid>100142</if_sid>
+    <field name="logon.tipo" type="pcre2">^10$</field>
+    <description>[$(besafe.caso)] Logon por área de trabalho remota de $(logon.usuario) em $(host.nome), origem $(logon.ip_origem)</description>
+    <mitre><id>T1021.001</id></mitre>
+    <group>besafe_logon,</group>
+  </rule>
+
+  <!-- Windows: contas e grupos -->
+  <rule id="100150" level="8">
+    <if_sid>100100</if_sid>
+    <field name="besafe.fonte" type="pcre2">^windows$</field>
+    <field name="besafe.evento" type="pcre2">^4720$</field>
+    <description>[$(besafe.caso)] Conta $(conta.criada) criada em $(host.nome) por $(conta.por)</description>
+    <mitre><id>T1136.001</id></mitre>
+    <group>besafe_contas,</group>
+  </rule>
+
+  <rule id="100151" level="12">
+    <if_sid>100100</if_sid>
+    <field name="besafe.fonte" type="pcre2">^windows$</field>
+    <field name="besafe.evento" type="pcre2">^4732$</field>
+    <field name="conta.grupo" type="pcre2">(?i)^(administrators|administradores)$</field>
+    <description>[$(besafe.caso)] $(conta.membro) adicionado ao grupo Administradores em $(host.nome) por $(conta.por)</description>
+    <mitre><id>T1098</id></mitre>
+    <group>besafe_contas,</group>
+  </rule>
+
+  <!-- Firewall: varredura -->
+  <rule id="100170" level="2">
+    <if_sid>100100</if_sid>
+    <field name="besafe.fonte" type="pcre2">^firewall$</field>
+    <description>[$(besafe.caso)] Conexão $(rede.ip_origem) para $(rede.ip_destino):$(rede.porta_destino)</description>
+    <group>besafe_rede,</group>
+  </rule>
+
+  <rule id="100171" level="8" frequency="12" timeframe="120">
+    <if_matched_sid>100170</if_matched_sid>
+    <same_field>rede.ip_origem</same_field>
+    <same_field>rede.ip_destino</same_field>
+    <different_field>rede.porta_destino</different_field>
+    <description>[$(besafe.caso)] Varredura de portas: $(rede.ip_origem) tocou várias portas de $(rede.ip_destino)</description>
+    <mitre><id>T1046</id></mitre>
+    <group>besafe_rede,</group>
+  </rule>
+
+</group>

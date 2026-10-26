@@ -77,5 +77,13 @@ CRED
   systemctl restart wazuh-manager filebeat wazuh-dashboard
 fi
 
+# Console: semente e plantoes sao desta copia. Qualquer resto do build e descartado.
+if [ -d "$ESTADO/console" ]; then
+  systemctl stop besafe-console 2>/dev/null || true
+  rm -f "$ESTADO/console/semente" "$ESTADO/console/console.db"
+  : > /var/log/besafe/eventos.json
+  systemctl start besafe-console || true
+fi
+
 touch "$ESTADO/primeiro-boot.ok"
 echo "== concluido"

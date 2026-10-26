@@ -1,0 +1,34 @@
+id: conta-admin-ferias
+titulo: Conta nova adicionada a Administradores por administrador de férias
+atores:
+  admin: {colaborador: {setor: TI}}
+  origem: {colaborador: {setor: Operações}}
+  alvo: {servidor: SRV-ARQ01}
+linha_do_tempo:
+  - atraso: 0
+    fonte: windows
+    evento: 4624
+    host: {nome: "{alvo.nome}", ip: "{alvo.ip}"}
+    logon: {usuario: "{admin.login}", tipo: 10, ip_origem: "{origem.ip}"}
+  - atraso: 70
+    fonte: windows
+    evento: 4720
+    host: {nome: "{alvo.nome}", ip: "{alvo.ip}"}
+    conta: {criada: "suporte.temp", por: "{admin.login}"}
+  - atraso: 85
+    fonte: windows
+    evento: 4732
+    host: {nome: "{alvo.nome}", ip: "{alvo.ip}"}
+    conta: {membro: "suporte.temp", grupo: "Administrators", por: "{admin.login}"}
+verdade:
+  classificacao: vp
+  severidade: critica
+  escalar: true
+  iocs: ["suporte.temp", "{origem.maquina}"]
+  taticas: [Persistence, Privilege Escalation, Lateral Movement]
+dicas:
+  - "Quem fez as alterações? Consulte essa pessoa no Diretório."
+  - "De qual máquina veio o acesso RDP ao servidor? De quem é essa máquina?"
+  - "O administrador está de férias, o acesso veio de uma estação de Operações e o resultado foi uma conta nova com poder de administrador no servidor de arquivos: credencial de administrador comprometida. Escale imediatamente."
+extras:
+  diretorio_ferias: "{admin.login}"

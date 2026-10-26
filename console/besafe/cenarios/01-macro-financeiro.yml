@@ -1,0 +1,57 @@
+id: macro-financeiro
+titulo: Planilha de fornecedor abre PowerShell oculto
+atores:
+  vitima: {colaborador: {setor: Financeiro}}
+  correio: {servidor: SRV-MAIL01}
+  externo: {ip_externo: true}
+  dominio_c2: {dominio: "nf-atualizacao-{rand}.example"}
+  comando: {ps_codificado: "Write-Host 'Treinamento Be Safe: simulacao de macro maliciosa'"}
+linha_do_tempo:
+  - atraso: 0
+    fonte: email
+    evento: recebido
+    host: {nome: "{correio.nome}", ip: "{correio.ip}"}
+    email:
+      remetente: "cobranca@transportes-andorinha-nf.example"
+      para: "{vitima.email}"
+      assunto: "Nota fiscal pendente - planilha de conferência"
+      anexo: "conferencia_frete_outubro.xlsm"
+      spf: softfail
+  - atraso: 95
+    fonte: sysmon
+    evento: 1
+    host: {nome: "{vitima.maquina}", ip: "{vitima.ip}"}
+    processo:
+      usuario: "PANTERA\\{vitima.login}"
+      pai: 'C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE'
+      imagem: 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
+      linha_comando: "powershell.exe -nop -w hidden -enc {comando}"
+  - atraso: 99
+    fonte: sysmon
+    evento: 3
+    host: {nome: "{vitima.maquina}", ip: "{vitima.ip}"}
+    processo:
+      usuario: "PANTERA\\{vitima.login}"
+      imagem: 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
+    rede: {ip_destino: "{externo}", porta_destino: 443, dominio: "{dominio_c2}"}
+verdade:
+  classificacao: vp
+  severidade: critica
+  escalar: true
+  iocs: ["{externo}", "{dominio_c2}", "conferencia_frete_outubro.xlsm"]
+  taticas: [Initial Access, Execution, Command and Control]
+dicas:
+  - "Olhe o processo pai do PowerShell. Faz sentido esse programa abrir um terminal?"
+  - "Repare nas opções -nop, -w hidden e -enc. E procure o que aconteceu com a mesma máquina logo antes e logo depois."
+  - "Há um e-mail com anexo .xlsm para a mesma pessoa minutos antes, e o PowerShell conecta num domínio externo recém-visto. Isso é a cadeia phishing, execução e comando e controle."
+extras:
+  phishing:
+    de: "Transportes Andorinha <cobranca@transportes-andorinha-nf.example>"
+    para: "{vitima.email}"
+    assunto: "Nota fiscal pendente - planilha de conferência"
+    corpo: "Prezados, segue planilha de conferência do frete de outubro. Favor habilitar a edição e o conteúdo para visualizar os valores. Atenciosamente, Financeiro Andorinha."
+    reportado_por: "{vitima.nome}"
+  pessoa:
+    nome: "{vitima.nome}"
+    papel: "pessoa do Financeiro que abriu o anexo"
+    lembra: "Recebi o e-mail de um fornecedor que a gente conhece, abri a planilha e apareceu uma barra amarela pedindo para habilitar o conteúdo. Eu cliquei. A planilha ficou em branco e eu achei que estava com defeito. Não digitei senha em lugar nenhum."

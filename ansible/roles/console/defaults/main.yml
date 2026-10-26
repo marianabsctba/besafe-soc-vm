@@ -1,0 +1,20 @@
+console_dir: /opt/besafe/console
+console_estado: /var/lib/besafe/console
+console_eventos: /var/log/besafe/eventos.json
+console_porta: 8080
+# enviado pelo Packer (veja packer/besafe.pkr.hcl)
+console_src: /tmp/besafe-console
+console_pip:
+  - fastapi==0.115.6
+  - uvicorn==0.32.1
+  - pyyaml==6.0.2
+
+# IA local: llama.cpp (MIT) e modelo com licenca que permite redistribuir
+ia_instalar: true
+ia_dir: /opt/besafe/ia
+llama_versao: b11574
+llama_url: "https://github.com/ggml-org/llama.cpp/releases/download/{{ llama_versao }}/llama-{{ llama_versao }}-bin-ubuntu-x64.tar.gz"
+llama_sha256: 3ce89cdda2a66bf9fc76afa105bfa943715b345d88be81632f4b938db4cc92e7
+ia_modelo_url: https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+ia_modelo_sha256: 3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597
+ia_modelo_licenca: "Apache-2.0 (Qwen3-4B-Instruct-2507)"

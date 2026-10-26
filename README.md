@@ -1,83 +1,109 @@
 # Be Safe SOC Lab
 
-VM gratuita da Be Safe para formar analistas de SOC nível 1. Em vez de uma lista de labs com flags, o aluno entra como N1 recém contratado de uma empresa fictícia e trabalha em plantões: alertas gerados ao vivo, muito ruído, tickets, passagem de turno e escalonamento.
+VM gratuita da Be Safe para formar analistas de SOC nível 1, do zero ao primeiro plantão. Tudo offline: ferramentas de mercado, logs reais de ataques e um treinamento completo, passo a passo, dentro da própria VM.
 
 ![Desktop](docs/preview-desktop.png)
 
-## Diferenciais
+## O que tem na versão 0.1
 
-- **Telemetria única por aluno:** cada instalação tem uma semente própria (IPs, usuários, hashes, horários), então a resposta de um aluno não vale para outro.
-- **Ruído realista:** a maior parte dos alertas é falso positivo. A nota mede julgamento de triagem, não caça a flag.
-- **Ticket como entrega:** evidência, linha do tempo, severidade e escalonamento.
-- **Contexto brasileiro e LGPD:** golpes de PIX, phishing gov.br, malware de boleto e cenários que terminam em "precisa comunicar à ANPD?".
-- **IA local e offline:** mentor N2 socrático, pessoas simuladas (usuária, gestor, N2) e um lab de prompt injection contra o copiloto do SOC.
+- **Treinamento completo em 13 módulos**, pensado para quem está começando, sem ser raso: terminal, redes, Windows pelos logs, fundamentos de SOC, Wazuh, Suricata e Wireshark, caça em logs do Windows, phishing, CyberChef/YARA/Sigma, ticket e plantão, **LGPD para o N1** e um caso final. Glossário e cola de comandos.
+- **Labs com dados reais**: centenas de logs gravados em ataques reais a Windows (EVTX-ATTACK-SAMPLES), alertas gerados ao vivo no próprio Wazuh, tráfego capturado e analisado pelo Suricata, e-mails e anexos de treino.
+- **Ferramentas de mercado** prontas para uso (tabela abaixo).
+- **Identidade Be Safe** no boot, no login, no desktop e no terminal.
+- **Segurança da imagem**: senha do Wazuh única por cópia, serviços só em localhost, firewall ativo, SSH desligado.
+
+### Próximas versões
+
+- Console Be Safe: plantões, fila de tickets e nota.
+- Telemetria única por aluno (semente própria por instalação).
+- IA local e offline: mentor N2, pessoas simuladas e lab de prompt injection.
 
 Detalhes em [docs/arquitetura.md](docs/arquitetura.md).
 
-## Estrutura
-
-```
-branding/            identidade visual (pantera, paleta, fontes OFL)
-  build_assets.py    gera papel de parede, login, GRUB, Plymouth e ícones em branding/out
-  preview.py         gera as prévias em docs/
-packer/              template da VM (Ubuntu 24.04, VirtualBox, saída OVA)
-ansible/
-  site.yml           playbook principal
-  roles/base         usuário do aluno, XFCE, guest tools, firewall
-  roles/branding     identidade no boot, login, XFCE, terminal e Wazuh
-  roles/wazuh        Wazuh all-in-one enxuto para lab
-  roles/ferramentas  Suricata, Wireshark, Hayabusa, Chainsaw, Sigma, YARA, CyberChef e afins
-  roles/primeiro_boot senhas únicas por cópia da VM
-docs/                arquitetura e prévias
-```
-
-## Gerar as artes
-
-```bash
-pip install pillow
-python branding/build_assets.py
-python branding/preview.py
-```
-
-## Construir a VM
-
-Requisitos no host: [Packer](https://developer.hashicorp.com/packer) e VirtualBox. O Ansible roda dentro da VM, então não precisa estar instalado no host.
-
-```bash
-packer init packer
-packer build packer
-```
-
-A OVA sai em `output-besafe-<versao>/`. O build leva de 30 a 60 minutos.
-
 ## Usar a VM
 
-- **VirtualBox:** Arquivo > Importar Appliance > `besafe-soc-lab-<versao>.ova`.
-- **VMware Workstation/Player:** Arquivo > Abrir > a mesma `.ova` (ou o `.vmx` da pasta VMware).
-- Requisito: host com 16 GB de RAM (a VM usa 12 GB) e 4 núcleos.
-- Login: usuário `analista`, senha `analista`.
-- A senha do Wazuh dashboard é única por cópia e fica em `~/.besafe/wazuh.txt`.
+1. Importe a `besafe-soc-lab-<versao>.ova`:
+    - **VMware Workstation/Player:** Arquivo > Abrir > a `.ova`.
+    - **VirtualBox:** Arquivo > Importar Appliance > a `.ova`.
+2. Ligue a VM e entre com as credenciais abaixo.
+3. Abra o ícone **Treinamento Be Safe** na área de trabalho e comece pelo módulo 0.
+
+**Requisitos:** host com 16 GB de RAM (a VM usa 12 GB; funciona com 8 GB, mais devagar), 4 núcleos e cerca de 25 GB livres em disco.
+
+### Credenciais
+
+| Onde | Usuário | Senha |
+|---|---|---|
+| Login da VM e `sudo` | `analista` | `analista` |
+| Wazuh dashboard (`https://localhost`, dentro da VM) | `admin` | **única por cópia**, gerada no primeiro boot |
+
+A senha do Wazuh aparece no arquivo **CREDENCIAIS.txt** da área de trabalho, no banner de todo terminal novo e em `~/.besafe/wazuh.txt`. Ela é única para que nenhuma cópia da VM compartilhe a senha de administrador do SIEM com outra.
 
 ## O que vem na VM
 
 | Ferramenta | Para quê |
 |---|---|
-| Wazuh 4.14 | SIEM: fila de alertas, busca e regras (`https://localhost`) |
-| Suricata + regras ET Open | IDS na interface da VM, alertas entram no Wazuh |
+| Wazuh 4.14 | SIEM: alertas, busca, regras, MITRE ATT&CK (`https://localhost`) |
+| Suricata + regras ET Open | IDS na interface da VM; os alertas entram no Wazuh |
 | Wireshark / tshark | análise de tráfego e PCAP |
-| Hayabusa / Chainsaw | caça em logs EVTX do Windows (`hayabusa dfir-timeline`, `chainsaw hunt`) |
-| EVTX-ATTACK-SAMPLES | logs reais de ataques em `/opt/besafe/chainsaw/EVTX-ATTACK-SAMPLES` |
-| sigma-cli | ler e converter regras Sigma |
-| oletools, pdfid, pdf-parser, exiftool, YARA | anexos suspeitos sem executar |
-| CyberChef | decodificação offline (`/opt/besafe/cyberchef/index.html`) |
+| Hayabusa / Chainsaw | caça em logs EVTX do Windows |
+| EVTX-ATTACK-SAMPLES | logs reais de ataques (`~/labs/EVTX-ATTACK-SAMPLES`) |
+| sigma-cli | escrever e validar regras Sigma |
+| YARA | regras para encontrar arquivos pelo conteúdo |
+| oletools, pdfid, pdf-parser, exiftool | anexos suspeitos sem executar |
+| CyberChef | decodificação offline |
+| Firefox (`.deb` da Mozilla), Mousepad | navegador e editor de texto |
 
-## Identidade visual
+## Construir a VM
 
-Preto `#050407` e rosa `#FC13B4`, com a pantera da Be Safe no boot (GRUB e Plymouth), na tela de login, no papel de parede, no terminal e no Wazuh dashboard.
+O build usa [Packer](https://developer.hashicorp.com/packer). O Ansible roda **dentro** da VM, então não precisa estar instalado no host.
+
+**Linux com KVM (recomendado), incluindo WSL2 no Windows:**
+
+```bash
+sudo apt install qemu-system-x86 qemu-utils
+packer init packer
+packer build -only=qemu.besafe -var saida=$HOME/out packer
+bash packer/scripts/empacotar.sh $HOME/out/qemu-besafe-soc-lab-0.1.0/besafe-soc-lab-0.1.0.qcow2 vmware/ 0.1.0
+```
+
+Depois gere a OVA com o `ovftool` da VMware:
+
+```bash
+ovftool --acceptAllEulas --compress=9 vmware/besafe-soc-lab-0.1.0.vmx besafe-soc-lab-0.1.0.ova
+```
+
+**VirtualBox:** `packer build -only=virtualbox-iso.besafe packer`. Funciona em hosts **sem** Hyper-V. No Windows com WSL ou Docker (Hyper-V ativo), o VirtualBox trava durante a instalação; use o caminho do QEMU.
+
+O build leva de 35 a 60 minutos e precisa de internet (baixa o Ubuntu, o Wazuh e as ferramentas). A VM resultante funciona offline.
+
+## Estrutura
+
+```
+branding/              identidade visual (pantera, paleta, fontes OFL)
+packer/                template da VM (QEMU e VirtualBox) e scripts de limpeza e empacotamento
+ansible/
+  roles/base           usuário do aluno, XFCE, Firefox, firewall
+  roles/branding       boot, login, desktop e terminal
+  roles/wazuh          Wazuh all-in-one enxuto para lab
+  roles/ferramentas    Suricata, Wireshark, Hayabusa, Chainsaw, Sigma, YARA, CyberChef...
+  roles/treinamento    gera o treinamento em HTML e a pasta de labs
+  roles/primeiro_boot  senhas únicas e credenciais visíveis por cópia
+treinamento/
+  modulos/             o conteúdo, em Markdown
+  labs/                arquivos dos exercícios
+  build_html.py        gera as páginas preto e rosa
+docs/                  arquitetura e prévias
+```
+
+## Licenças de terceiros
+
+- **EVTX-ATTACK-SAMPLES** (Samir Bousseaden): GPL-3.0, distribuído junto com o Chainsaw.
+- **Wazuh**, **Suricata**, **Chainsaw**, **Hayabusa**, **CyberChef**, **YARA**, **oletools**: licenças livres de cada projeto.
+- Fontes **Orbitron** e **Rajdhani**: SIL Open Font License (em `branding/fonts`).
+- Os e-mails e anexos do módulo 8 são de treino e inertes: usam o domínio reservado `.example` e IPs de documentação.
 
 ![Boot](docs/preview-boot.png)
-
-Fontes: [Orbitron](https://fonts.google.com/specimen/Orbitron) e [Rajdhani](https://fonts.google.com/specimen/Rajdhani), ambas sob SIL Open Font License (licenças em `branding/fonts`).
 
 ---
 

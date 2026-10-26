@@ -1,0 +1,41 @@
+id: scanner-autorizado
+titulo: Varredura de portas interna a partir do scanner da TI
+atores:
+  scanner: {servidor: SRV-SCAN01}
+  alvo1: {servidor: SRV-ERP01}
+  alvo2: {servidor: SRV-ARQ01}
+  mudanca: {numero: [4100, 4999]}
+linha_do_tempo:
+  - atraso: 0
+    repetir: 25
+    intervalo: 2
+    portas: [21, 22, 23, 25, 80, 135, 139, 443, 445, 1433, 3306, 3389, 5432, 5985, 8080]
+    fonte: firewall
+    evento: conexao
+    host: {nome: "{alvo1.nome}", ip: "{alvo1.ip}"}
+    rede: {ip_origem: "{scanner.ip}", ip_destino: "{alvo1.ip}", porta_destino: "{porta_aleatoria}", acao: permitida, flags: SYN}
+  - atraso: 60
+    repetir: 25
+    intervalo: 2
+    portas: [21, 22, 23, 25, 80, 135, 139, 443, 445, 1433, 3306, 3389, 5432, 5985, 8080]
+    fonte: firewall
+    evento: conexao
+    host: {nome: "{alvo2.nome}", ip: "{alvo2.ip}"}
+    rede: {ip_origem: "{scanner.ip}", ip_destino: "{alvo2.ip}", porta_destino: "{porta_aleatoria}", acao: permitida, flags: SYN}
+verdade:
+  classificacao: vpb
+  severidade: baixa
+  escalar: false
+  iocs: []
+  taticas: [Discovery]
+dicas:
+  - "Quem é a máquina de origem? Consulte o Inventário."
+  - "O comportamento é de varredura. A pergunta é: era esperado? Veja a Agenda de mudanças."
+  - "A origem é o SRV-SCAN01 e há uma mudança aprovada para esta varredura: verdadeiro positivo benigno. Registre o número da mudança no ticket e feche."
+extras:
+  mudanca:
+    numero: "GMUD-{mudanca}"
+    titulo: "Varredura de vulnerabilidades extraordinária em SRV-ERP01 e SRV-ARQ01"
+    janela: "hoje, durante o plantão"
+    responsavel: "Equipe de Segurança da Informação"
+    origem: "SRV-SCAN01 ({scanner.ip})"
