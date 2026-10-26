@@ -12,6 +12,11 @@
       - python3-pil
     state: present
     update_cache: true
+  # espelhos (Ubuntu, Mozilla) as vezes estao no meio de uma sincronizacao
+  register: apt_resultado
+  until: apt_resultado is succeeded
+  retries: 5
+  delay: 30
 
 - name: desktop XFCE minimo (Xubuntu core)
   ansible.builtin.apt:
@@ -68,6 +73,11 @@
     # o pacote de transicao do Ubuntu tem epoca "1:", maior que a versao da Mozilla
     allow_downgrade: true
   when: besafe_desktop | bool
+  # espelhos (Ubuntu, Mozilla) as vezes estao no meio de uma sincronizacao
+  register: apt_resultado
+  until: apt_resultado is succeeded
+  retries: 5
+  delay: 30
 
 # sem termos de uso, telemetria ou boas-vindas (VM offline e de treino), treinamento como
 # pagina inicial e favoritos para as ferramentas

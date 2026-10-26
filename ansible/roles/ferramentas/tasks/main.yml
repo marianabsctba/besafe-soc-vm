@@ -23,6 +23,11 @@
       - xxd
     state: present
     update_cache: true
+  # espelhos (Ubuntu, Mozilla) as vezes estao no meio de uma sincronizacao
+  register: apt_resultado
+  until: apt_resultado is succeeded
+  retries: 5
+  delay: 30
 
 - name: diretorio das ferramentas
   ansible.builtin.file:

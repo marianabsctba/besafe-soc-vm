@@ -13,6 +13,11 @@
     state: present
     update_cache: true
   when: besafe_desktop | bool
+  # espelhos (Ubuntu, Mozilla) as vezes estao no meio de uma sincronizacao
+  register: apt_resultado
+  until: apt_resultado is succeeded
+  retries: 5
+  delay: 30
 
 - name: gerar artes a partir da pantera
   ansible.builtin.command:
