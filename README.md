@@ -37,14 +37,21 @@
 
 ## Usar a VM
 
-1. Baixe a `besafe-soc-lab-<versão>.ova` (cerca de 5,3 GB) pelo link divulgado pela Be Safe.
-2. Importe:
-    - **VMware Workstation / Player:** Arquivo > Abrir > a `.ova`.
-    - **VirtualBox:** Arquivo > Importar Appliance > a `.ova`.
-3. Ligue a VM. O primeiro boot leva cerca de 1 minuto a mais: é quando a VM gera as senhas e a semente próprias dela.
-4. Entre com as credenciais abaixo e abra o ícone **Treinamento Be Safe**.
+> **Nunca usou uma máquina virtual?** Siga o **[guia de instalação passo a passo](docs/instalacao.md)**: requisitos, como ligar a virtualização na BIOS, como baixar, conferir e juntar as partes, importar e resolver os problemas mais comuns.
 
-**Requisitos:** host com 16 GB de RAM (a VM usa 12 GB), 4 núcleos e cerca de 25 GB livres em disco. Funciona com 8 GB de RAM, mais devagar e sem a IA local.
+Resumo para quem já tem prática:
+
+1. Em [**Releases**](../../releases/latest), baixe todas as partes `besafe-soc-lab-<versão>.ova.partNN` e o `SHA256SUMS.txt` para a mesma pasta. O GitHub só aceita arquivos de até 2 GB, por isso a OVA vem dividida.
+2. Confira os hashes e junte as partes:
+    - **Windows (cmd):** `copy /b parte01 + parte02 + ... besafe-soc-lab-<versão>.ova` (o comando pronto está nas notas do release)
+    - **Linux:** `sha256sum -c SHA256SUMS.txt --ignore-missing && cat besafe-soc-lab-*.ova.part* > besafe-soc-lab.ova`
+3. Importe a `.ova`:
+    - **VMware Workstation / Fusion:** File > Open. **Recomendado no Windows com WSL ou Docker.**
+    - **VirtualBox 7:** Arquivo > Importar Appliance.
+4. Ligue a VM. O primeiro boot leva cerca de 1 minuto a mais: é quando a VM gera as senhas e a semente próprias dela.
+5. Entre com `analista` / `analista` e abra o ícone **Treinamento Be Safe**, começando pelo módulo 0.
+
+**Requisitos:** processador x86 (Intel ou AMD) com virtualização ligada, 16 GB de RAM (a VM usa 12 GB), 4 núcleos e cerca de 60 GB livres em disco. Funciona com 8 GB de RAM reduzindo a VM para 5 GB, mais devagar e sem a IA local. **Não roda em Mac com chip Apple.**
 
 ### Credenciais
 
