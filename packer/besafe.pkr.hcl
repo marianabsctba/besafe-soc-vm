@@ -26,7 +26,7 @@ packer {
 
 variable "versao" {
   type    = string
-  default = "0.1.0"
+  default = "0.2.0"
 }
 
 variable "iso_url" {
