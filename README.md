@@ -39,17 +39,21 @@
 
 > **Nunca usou uma máquina virtual?** Siga o **[guia de instalação passo a passo](docs/instalacao.md)**: requisitos, como ligar a virtualização na BIOS, como baixar, conferir e juntar as partes, importar e resolver os problemas mais comuns.
 
-Resumo para quem já tem prática:
+**Jeito fácil (Windows, Linux e Mac Intel):** baixe o instalador dos **Assets** do [release mais recente](../../releases/latest), **leia** o que ele faz e rode. Ele baixa as partes, confere os hashes, junta a OVA e importa no VMware ou no VirtualBox.
 
-1. Em [**Releases**](../../releases/latest), baixe todas as partes `besafe-soc-lab-<versão>.ova.partNN` e o `SHA256SUMS.txt` para a mesma pasta. O GitHub só aceita arquivos de até 2 GB, por isso a OVA vem dividida.
-2. Confira os hashes e junte as partes:
-    - **Windows (cmd):** `copy /b parte01 + parte02 + ... besafe-soc-lab-<versão>.ova` (o comando pronto está nas notas do release)
-    - **Linux:** `sha256sum -c SHA256SUMS.txt --ignore-missing && cat besafe-soc-lab-*.ova.part* > besafe-soc-lab.ova`
-3. Importe a `.ova`:
-    - **VMware Workstation / Fusion:** File > Open. **Recomendado no Windows com WSL ou Docker.**
-    - **VirtualBox 7:** Arquivo > Importar Appliance.
-4. Ligue a VM. O primeiro boot leva cerca de 1 minuto a mais: é quando a VM gera as senhas e a semente próprias dela.
-5. Entre com `analista` / `analista` e abra o ícone **Treinamento Be Safe**, começando pelo módulo 0.
+```powershell
+# Windows, na pasta onde o arquivo foi salvo
+powershell -ExecutionPolicy Bypass -File .\instalar-besafe.ps1
+```
+
+```bash
+# Linux e Mac (Intel)
+bash instalar-besafe.sh
+```
+
+**Jeito manual:** baixe todas as partes `besafe-soc-lab-<versão>.ova.partNN` e o `SHA256SUMS.txt`, confira os hashes, junte as partes (`copy /b` no Windows, `cat` no Linux e no Mac) e importe a `.ova` no VMware (File > Open) ou no VirtualBox (Arquivo > Importar Appliance). O passo a passo completo está no [guia](docs/instalacao.md).
+
+Depois: ligue a VM (o primeiro boot leva 1 minuto a mais), entre com `analista` / `analista` e abra o ícone **Treinamento Be Safe**, começando pelo módulo 0.
 
 **Requisitos:** processador x86 (Intel ou AMD) com virtualização ligada, 16 GB de RAM (a VM usa 12 GB), 4 núcleos e cerca de 60 GB livres em disco. Funciona com 8 GB de RAM reduzindo a VM para 5 GB, mais devagar e sem a IA local. **Não roda em Mac com chip Apple.**
 
@@ -138,6 +142,7 @@ ansible/roles/
   console              Console Be Safe, regras do motor no Wazuh e IA local
   treinamento          treinamento em HTML e pasta de labs
   primeiro_boot        senhas, semente e credenciais únicas por cópia
+instalar/              instaladores automáticos (Windows, Linux e Mac Intel)
 console/               Console Be Safe (FastAPI), motor de cenários, cenários em YAML, regras Wazuh
 treinamento/           módulos em Markdown, labs e gerador HTML
 docs/                  arquitetura, decisões e imagens

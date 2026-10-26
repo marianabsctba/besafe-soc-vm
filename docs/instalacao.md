@@ -6,7 +6,7 @@
 
 Este guia é para quem **nunca usou uma máquina virtual**. Siga na ordem e não pule a parte de conferir os arquivos: ela evita a maioria dos problemas.
 
-> **Resumo para quem tem pressa:** baixe as partes do release, junte numa `.ova`, importe no VMware ou no VirtualBox e ligue. Login `analista` / `analista`.
+> **Resumo para quem tem pressa:** confira os requisitos (passos 1 e 2), rode o **instalador automático** (passo 3) e ligue a VM. Login `analista` / `analista`.
 
 ---
 
@@ -64,7 +64,54 @@ Escolha **um**:
 
 ---
 
-## 3. Baixe as partes
+## 3. Jeito fácil: o instalador automático (recomendado)
+
+O instalador faz sozinho os passos chatos: confere se o seu computador aguenta, baixa as partes (e continua de onde parou se a internet cair), confere o hash de cada uma, baixa de novo a que vier corrompida, junta tudo numa OVA, confere a OVA e importa no VMware ou no VirtualBox. Se o seu computador tiver menos de 16 GB de RAM, ele já ajusta a VM para 5 GB.
+
+> [!IMPORTANT]
+> **Leia antes de rodar.** Copiar da internet um comando que baixa e já executa um script é exatamente o que um atacante quer que você faça. Por isso aqui é diferente: você baixa o script, **abre num editor de texto e lê** (ele é curto e comentado em português) e só então roda. Ele só baixa arquivos de dados do release; nada baixado da internet é executado. Pegue esse hábito para a vida, bebê: é o primeiro reflexo de quem trabalha com segurança.
+
+### No Windows
+
+1. Na página do release mais recente, em **Assets**, baixe o **`instalar-besafe.ps1`**. Ele também está no repositório, na pasta [`instalar`](../instalar).
+2. Abra o arquivo no Bloco de Notas e leia.
+3. Na pasta onde ele foi salvo (geralmente **Downloads**), clique com o botão direito num espaço vazio > **Abrir no Terminal** e rode:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\instalar-besafe.ps1
+```
+
+O Windows bloqueia scripts baixados por padrão. O `-ExecutionPolicy Bypass` libera **só esta execução**, sem mudar nenhuma configuração do sistema.
+
+Os downloads vão para a pasta `BeSafe` dentro da sua pasta de usuário. Para usar outro disco, acrescente `-Pasta D:\BeSafe` no fim do comando.
+
+### No Linux e no Mac (Intel)
+
+1. Baixe o **`instalar-besafe.sh`** dos **Assets** do release (ou da pasta [`instalar`](../instalar) do repositório).
+2. Leia: `less instalar-besafe.sh`
+3. Rode:
+
+```bash
+bash instalar-besafe.sh
+```
+
+Para usar outro disco: `bash instalar-besafe.sh --pasta /caminho/BeSafe`.
+
+### Quando ele terminar
+
+- Se ele importou no **VMware**, a VM abre sozinha no VMware (ou fica na pasta que ele mostrar). Clique em **Power on**.
+- Se importou no **VirtualBox**, abra o VirtualBox, selecione **Be Safe SOC Lab** e clique em **Iniciar**.
+- Se não encontrou nenhum dos dois, ele avisa onde a OVA ficou: importe como no passo 4.4.
+
+Agora pule para o **passo 5 (Primeiro boot)**.
+
+---
+
+## 4. Jeito manual, passo a passo
+
+Prefere fazer na mão, ou o instalador deu algum erro? Siga daqui.
+
+### 4.1 Baixe as partes
 
 1. Abra a página de **Releases** do repositório e entre na versão mais recente.
 2. Em **Assets**, baixe **todos** estes arquivos para a **mesma pasta** (por exemplo `Downloads\besafe`):
@@ -76,7 +123,7 @@ Não tente abrir uma parte sozinha: nenhuma delas funciona isolada.
 
 ---
 
-## 4. Confira se os arquivos chegaram inteiros
+### 4.2 Confira se os arquivos chegaram inteiros
 
 Cada arquivo tem uma "impressão digital" (hash SHA-256) publicada no `SHA256SUMS.txt`. Se o hash calculado no seu computador for igual ao publicado, o arquivo chegou perfeito. Analista de SOC confere hash. Comece agora. 😉
 
@@ -107,7 +154,7 @@ Se algum hash não bater, **baixe aquela parte de novo**.
 
 ---
 
-## 5. Junte as partes numa OVA
+### 4.3 Junte as partes numa OVA
 
 Os comandos abaixo usam a versão 0.2.0 como exemplo. Troque pelo número da versão que você baixou.
 
@@ -127,7 +174,7 @@ Está no PowerShell em vez do Prompt de Comando? Coloque `cmd /c` antes do coman
 cat besafe-soc-lab-0.2.0.ova.part* > besafe-soc-lab-0.2.0.ova
 ```
 
-Confira o resultado: a OVA juntada também tem o hash dela no `SHA256SUMS.txt`. Rode o mesmo comando do passo 4 apontando para a `.ova`:
+Confira o resultado: a OVA juntada também tem o hash dela no `SHA256SUMS.txt`. Rode o mesmo comando do passo 4.2 apontando para a `.ova`:
 
 ```powershell
 Get-FileHash .\besafe-soc-lab-0.2.0.ova -Algorithm SHA256
@@ -137,23 +184,23 @@ Bateu? Pode apagar as partes para liberar espaço.
 
 ---
 
-## 6. Importe a VM
+### 4.4 Importe a VM
 
-### No VMware Workstation (ou Fusion)
+#### No VMware Workstation (ou Fusion)
 
 1. **File > Open** (Arquivo > Abrir) e escolha a `besafe-soc-lab-<versão>.ova`.
 2. Dê um nome e escolha uma pasta com **pelo menos 50 GB livres**. Clique em **Import**.
 3. Se aparecer um aviso sobre especificação OVF, clique em **Retry**. É normal.
 4. A importação leva de 5 a 15 minutos.
 
-### No VirtualBox
+#### No VirtualBox
 
 1. **Arquivo > Importar Appliance** e escolha a `.ova`.
 2. Na tela de configurações, em **Pasta Base da Máquina**, escolha um disco com **pelo menos 50 GB livres**.
 3. Em **Política de Endereço MAC**, deixe **Gerar novos endereços MAC para todas as placas de rede**.
 4. Clique em **Finalizar** e aguarde.
 
-### Ajuste a memória se o seu computador tiver 8 GB
+#### Ajuste a memória se o seu computador tiver 8 GB
 
 A VM vem com **12 GB de RAM e 4 núcleos**. Num computador com 8 GB isso trava tudo. Antes de ligar:
 
@@ -164,7 +211,7 @@ Com 5 GB, o Wazuh, as ferramentas e o treinamento funcionam. A IA local (mentor,
 
 ---
 
-## 7. Primeiro boot
+## 5. Primeiro boot
 
 1. Ligue a VM. Você vai ver a pantera da Be Safe.
 2. O **primeiro** boot leva cerca de 1 minuto a mais: é quando a VM gera as senhas e a semente de cenários exclusivas da sua cópia. Não desligue no meio.
@@ -198,26 +245,28 @@ Logo depois de ligar a VM, o Wazuh pode levar **2 a 3 minutos** para ficar pront
 
 ---
 
-## 8. Deu problema?
+## 6. Deu problema?
 
 | O que aparece | O que fazer |
 |---|---|
+| "a execução de scripts foi desabilitada neste sistema" ao rodar o instalador | Faltou o começo do comando. Rode exatamente `powershell -ExecutionPolicy Bypass -File .\instalar-besafe.ps1` |
+| O instalador parou no meio do download | Rode o mesmo comando de novo: ele continua de onde parou e confere tudo. |
 | "VT-x is disabled", "AMD-V is disabled" ou "This host supports Intel VT-x, but it is disabled" | A virtualização está desligada na BIOS. Veja o passo 1. |
 | VirtualBox muito lento, travando, tartaruga verde no canto | Hyper-V ligado (WSL, Docker Desktop). Use o VMware. |
-| Erro ao importar, "invalid file", "checksum", "unexpected end of file" | A OVA está incompleta. Confira os hashes (passo 4), baixe a parte que não bateu e junte de novo. |
-| O computador inteiro fica lento ao ligar a VM | Pouca RAM. Reduza para 5 GB e 2 núcleos (passo 6). Feche o navegador e outros programas pesados do seu computador. |
+| Erro ao importar, "invalid file", "checksum", "unexpected end of file" | A OVA está incompleta. Rode o instalador de novo (ele baixa só o que estiver errado) ou confira os hashes (passo 4.2), baixe a parte que não bateu e junte de novo. |
+| O computador inteiro fica lento ao ligar a VM | Pouca RAM. Reduza para 5 GB e 2 núcleos (passo 4.4). Feche o navegador e outros programas pesados do seu computador. |
 | "Not enough physical memory" | Mesma solução: reduza a memória da VM. |
 | Tela da VM pequena | Maximize a janela ou use tela cheia (VMware: `Ctrl` + `Alt` + `Enter`; VirtualBox: `Host` + `F`). A resolução se ajusta sozinha. |
 | O mouse ficou "preso" dentro da VM | VMware: `Ctrl` + `Alt`. VirtualBox: tecla `Ctrl` da direita. |
 | Wazuh não abre ou dá erro de login | Espere 3 minutos depois do boot. A senha certa está no **CREDENCIAIS.txt** da área de trabalho (ela é diferente em cada cópia). |
 | Mentor/IA demora na primeira pergunta | Normal: o modelo carrega sob demanda. As próximas respostas são bem mais rápidas. |
-| Esqueci o que fiz e quero recomeçar | Volte ao snapshot do passo 7. |
+| Esqueci o que fiz e quero recomeçar | Volte ao snapshot do passo 5. |
 
 A VM **não precisa de internet**. Ela funciona totalmente offline, e isso é proposital: você vai lidar com arquivos que imitam ataques.
 
 ---
 
-## 9. Próximo passo
+## 7. Próximo passo
 
 Abra o **Treinamento Be Safe**, comece pelo **módulo 0** e siga na ordem. Quando chegar no módulo 13, faça plantões de treino no Console e, quando estiver confiante, a **prova final**: com nota 70 ou mais você gera o seu certificado.
 
