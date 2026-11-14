@@ -6,6 +6,9 @@ case "$-" in
     [ -x /etc/update-motd.d/10-besafe ] && /etc/update-motd.d/10-besafe
     if [ -r "$HOME/.besafe/wazuh.txt" ]; then
       printf '  Wazuh: usuario admin | senha %s\n\n' "$(sed -n 's/^senha: //p' "$HOME/.besafe/wazuh.txt")"
+    else
+      printf '  Wazuh: a senha desta copia ainda esta sendo gerada (2 a 15 min no primeiro boot).\n'
+      printf '  Passou de 20 minutos? Rode: sudo besafe-senha-wazuh\n\n'
     fi
     ;;
 esac

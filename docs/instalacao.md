@@ -260,8 +260,30 @@ Logo depois de ligar a VM, o Wazuh pode levar **2 a 3 minutos** para ficar pront
 | Tela da VM pequena | Maximize a janela ou use tela cheia (VMware: `Ctrl` + `Alt` + `Enter`; VirtualBox: `Host` + `F`). A resolução se ajusta sozinha. |
 | O mouse ficou "preso" dentro da VM | VMware: `Ctrl` + `Alt`. VirtualBox: tecla `Ctrl` da direita. |
 | Wazuh não abre ou dá erro de login | Espere 3 minutos depois do boot. A senha certa está no **CREDENCIAIS.txt** da área de trabalho (ela é diferente em cada cópia). |
+| Não tem **CREDENCIAIS.txt** na área de trabalho, ou ele não mostra a senha do Wazuh | Veja logo abaixo, em "Sem a senha do Wazuh". |
 | Mentor/IA demora na primeira pergunta | Normal: o modelo carrega sob demanda. As próximas respostas são bem mais rápidas. |
 | Esqueci o que fiz e quero recomeçar | Volte ao snapshot do passo 5. |
+
+### Sem a senha do Wazuh
+
+No primeiro boot, a VM gera uma senha do Wazuh só dela. Em computadores mais lentos isso pode levar até uns 15 minutos.
+
+**Versão 0.2.1 ou mais nova:** enquanto a senha é gerada, o CREDENCIAIS.txt avisa "ESTÁ SENDO GERADA" e o terminal mostra o mesmo aviso. Se passar de 20 minutos, abra o terminal e rode:
+
+```bash
+sudo besafe-senha-wazuh
+```
+
+Ele gera uma senha nova, mostra na tela e atualiza o CREDENCIAIS.txt. Também serve se você perder a senha.
+
+**Versão 0.2.0:** em alguns computadores, o primeiro boot terminava sem criar o CREDENCIAIS.txt. Se já passou de 20 minutos desde que você ligou a VM pela primeira vez e o arquivo não apareceu, abra o terminal e rode os dois comandos abaixo, trocando `MinhaSenha.2026` por uma senha sua. Ela precisa ter de 8 a 64 caracteres, com letra maiúscula, letra minúscula, número e um destes símbolos: `.` `*` `+` `?` `-`
+
+```bash
+sudo bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh -u admin -p 'MinhaSenha.2026'
+sudo touch /var/lib/besafe/primeiro-boot.ok
+```
+
+O primeiro comando define a senha do usuário `admin` do Wazuh. O segundo marca o primeiro boot como concluído, para ele não trocar a senha de novo no próximo boot. Depois, entre em `https://localhost` com `admin` e a senha que você escolheu, e anote essa senha.
 
 A VM **não precisa de internet**. Ela funciona totalmente offline, e isso é proposital: você vai lidar com arquivos que imitam ataques.
 

@@ -120,7 +120,10 @@ $Pasta = (Resolve-Path $Pasta).Path
 $livre = (Get-PSDrive (Split-Path -Qualifier $Pasta).TrimEnd(':')).Free
 $precisa = 2 * $tamanho + 25GB
 if ($livre -lt $precisa) {
-  Falha ("Espaço insuficiente em {0}: {1:N0} GB livres, precisa de uns {2:N0} GB (download, OVA e VM importada). Rode de novo com -Pasta apontando para outro disco, por exemplo: -Pasta D:\BeSafe" -f (Split-Path -Qualifier $Pasta), ($livre / 1GB), ($precisa / 1GB))
+  # sugere o disco com mais espaco livre, se algum tiver o suficiente
+  $melhor = Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Free -ge $precisa } | Sort-Object Free -Descending | Select-Object -First 1
+  $dica = if ($melhor) { "Rode de novo apontando para o disco $($melhor.Name): -Pasta $($melhor.Name):\BeSafe" } else { "Nenhum disco tem esse espaço livre: libere espaço e rode de novo." }
+  Falha ("Espaço insuficiente em {0}: {1:N0} GB livres, precisa de uns {2:N0} GB (download, OVA e VM importada). {3}" -f (Split-Path -Qualifier $Pasta), ($livre / 1GB), ($precisa / 1GB), $dica)
 }
 Ok ("{0:N0} GB livres em {1}" -f ($livre / 1GB), $Pasta)
 

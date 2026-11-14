@@ -6,6 +6,12 @@
     state: directory
     mode: "0755"
 
+- name: comando de resgate da senha do Wazuh (tambem usado pelo primeiro boot)
+  ansible.builtin.copy:
+    src: besafe-senha-wazuh
+    dest: /usr/local/sbin/besafe-senha-wazuh
+    mode: "0755"
+
 - name: script de primeiro boot
   ansible.builtin.copy:
     src: besafe-primeiro-boot.sh
@@ -28,7 +34,8 @@
       Environment=BESAFE_USUARIO={{ besafe_usuario }}
       ExecStart=/usr/local/sbin/besafe-primeiro-boot
       RemainAfterExit=yes
-      TimeoutStartSec=15min
+      # maquinas lentas (8 GB, disco mecanico) levam muito tempo para subir o Wazuh
+      TimeoutStartSec=60min
 
       [Install]
       WantedBy=multi-user.target
